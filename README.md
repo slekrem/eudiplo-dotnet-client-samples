@@ -24,9 +24,14 @@ pattern for it, using only `Eudiplo.Client` — against a **real** EUDIPLO insta
 | Sample | Pattern | Status |
 |---|---|---|
 | [`Eudiplo.Client.Sample`](Eudiplo.Client.Sample) | Generic: root client → tenant → key-chain | ✅ |
-| [`Eudiplo.Client.Sample.AccessControl`](Eudiplo.Client.Sample.AccessControl) | Verify-loop gate: age-over-18 presentation | ✅ |
+| [`Eudiplo.Client.Sample.AccessControl`](Eudiplo.Client.Sample.AccessControl) | 3-tier gate: Lit+TS UI → ASP.NET backend → EUDIPLO | ✅ |
 | `Eudiplo.Client.Sample.CRM` | Verified data via webhook → enrich a record | planned |
 | `Eudiplo.Client.Sample.ERP` | Issue a credential ("credential creation") | planned |
+
+Unlike the others, `Eudiplo.Client.Sample.AccessControl` isn't a single console project —
+it has its own `Backend/` (the only piece using `Eudiplo.Client`) and `Frontend/`
+(Lit + TypeScript UI) subfolders, since the point of that sample is showing the boundary
+between "your UI" and "your backend" from the diagram above.
 
 ## Shared EUDIPLO instance
 
