@@ -14,6 +14,10 @@ namespace Eudiplo.Client.Sample.AccessControl.Backend;
 /// previous tenant across a backend restart — it deletes any leftover tenant with the same
 /// id and creates a fresh one every time <see cref="InitializeAsync"/> runs. Fine for a
 /// sample; a production gate would persist the tenant credentials in a secret store instead.
+///
+/// Set <c>GATE_CLIENT_ID</c>/<c>GATE_CLIENT_SECRET</c> to point this backend at an existing
+/// tenant instead (e.g. one with a real registrar-issued access certificate) — bypasses all
+/// of the above, see <see cref="InitializeAsync"/>.
 /// </summary>
 public sealed class GateService
 {
@@ -35,6 +39,25 @@ public sealed class GateService
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
+        // Points this backend at an already-provisioned tenant instead of creating a fresh,
+        // self-signed-cert one — e.g. a tenant with a real registrar-issued access
+        // certificate (see EudiploApiClient.Registrar.cs), which a real EUDI Wallet will
+        // actually trust. Skips tenant/key-chain/config setup entirely: all of that must
+        // already exist (this backend has no way to fetch an existing client's secret, so
+        // it can't safely reconcile/recreate without risking the very cert it's meant to
+        // preserve).
+        var existingClientId = Environment.GetEnvironmentVariable("GATE_CLIENT_ID");
+        var existingClientSecret = Environment.GetEnvironmentVariable("GATE_CLIENT_SECRET");
+        if (existingClientId is not null && existingClientSecret is not null)
+        {
+            Console.WriteLine($"Reusing existing gate tenant client '{existingClientId}' (GATE_CLIENT_ID is set) — no bootstrap performed.");
+            GateClient = new EudiploApiClient(
+                _httpClientFactory.CreateClient(EudiploApiClient.HttpClientName),
+                existingClientId, existingClientSecret);
+            Console.WriteLine("Gate ready.");
+            return;
+        }
+
         Console.WriteLine($"Provisioning gate tenant '{_tenantId}'...");
 
         if (await _rootClient.GetTenantAsync(_tenantId, ct) is not null)
