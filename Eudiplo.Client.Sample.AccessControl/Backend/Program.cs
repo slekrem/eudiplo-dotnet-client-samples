@@ -80,6 +80,23 @@ app.MapGet("/api/gate/sessions/{id}/events", async (string id, HttpContext ctx, 
     }
 });
 
+// Polling fallback alongside the SSE endpoint above — mobile browsers can silently kill a
+// backgrounded tab's long-lived connections while the user is away in their wallet app,
+// with no error ever surfacing to the page's JS to react to. The frontend polls this
+// periodically in addition to holding an SSE subscription, so a status change still gets
+// picked up even if that subscription died unnoticed. One-shot, same enrichment as above.
+app.MapGet("/api/gate/sessions/{id}", async (string id, GateService gate, CancellationToken ct) =>
+{
+    var sessionJson = await gate.GateClient.GetSessionAsync(id, ct);
+    if (sessionJson is null) return Results.NotFound();
+
+    var status = JsonDocument.Parse(sessionJson).RootElement.TryGetProperty("status", out var s) ? s.GetString() : null;
+    if (status == "completed")
+        sessionJson = EnforceAgeGate(sessionJson);
+
+    return Results.Text(sessionJson, "application/json");
+});
+
 Console.WriteLine("\nListening on http://localhost:5050");
 app.Run();
 

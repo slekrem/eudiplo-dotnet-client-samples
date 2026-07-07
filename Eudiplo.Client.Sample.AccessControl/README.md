@@ -35,7 +35,8 @@ scanning it — see "Completing the flow for real" below.
 - **`Frontend/`** — a single Lit 3 + TypeScript component (`gate-app`), built with Vite.
   No Shadow DOM (global stylesheet), no router — one page, one job. Renders the
   `openid4vp://` request as a QR code (via the `qrcode` package) and reacts to `EventSource`
-  messages — no polling timer needed.
+  messages, plus a 3s polling fallback against `GET /api/gate/sessions/{id}` — see "why
+  this mattered" below for why pure SSE alone wasn't enough on a real phone.
 
 ## 1. Start EUDIPLO
 
@@ -72,6 +73,11 @@ Startup provisions the gate's tenant, access key-chain, and presentation config 
 the real EUDIPLO instance — watch the console for each step. Once you see
 `Listening on http://localhost:5050`, open that URL in a browser.
 
+Set `GATE_CLIENT_ID`/`GATE_CLIENT_SECRET` instead to point this backend at an
+already-provisioned tenant (e.g. one with a real registrar-issued access certificate, see
+"Registrar registration" below) — skips all of the above and reuses that tenant as-is; see
+`GateService.InitializeAsync`'s doc comment.
+
 ## Live frontend development
 
 For edit-and-reload on the frontend without rebuilding into `wwwroot` each time, run the
@@ -97,7 +103,7 @@ Without your own registrar registration, a real wallet will still reject the gat
 self-signed access certificate ("Could not trust certificate chain") — that's the one part
 of the flow that genuinely needs registrar-issued certificates (see below) to complete.
 
-## Why building this against a real server (and a real wallet) mattered, three times over
+## Why building this against a real server (and a real wallet) mattered, five times over
 
 1. **Creating a presentation offer 404s without an access key-chain first** — not
    documented anywhere, only found by running the original console version of this sample
@@ -115,6 +121,21 @@ of the flow that genuinely needs registrar-issued certificates (see below) to co
    PID in a real wallet simply doesn't carry it. Selective age-only disclosure isn't
    possible for this credential today — the gate now requests `birthdate` (full disclosure)
    and checks the 18-year threshold itself.
+4. **`SubscribeToSessionEventsAsync`'s stream was bound by the shared `HttpClient`'s
+   `Timeout`** (15s default) — `HttpClient.Timeout` covers the entire request, including
+   reads on the response stream long after `SendAsync` returns, not just until headers
+   arrive. Every real subscription (waiting on a human to unlock their wallet) was getting
+   silently killed before anything interesting happened. Fixed in `Eudiplo.Client` itself —
+   see its own CHANGELOG.
+5. **Even after that fix, a real phone's browser can still silently drop the *browser →
+   backend* SSE connection** while the tab is backgrounded — switching away to the wallet
+   app to scan/confirm is exactly that. No `onerror` ever fires (the page's JS itself can be
+   paused, not just the connection), so a `visibilitychange`-triggered resubscribe alone
+   wasn't fully reliable in practice. Fixed by adding a plain 3-second poll
+   (`GET /api/gate/sessions/{id}`) alongside the SSE subscription — it doesn't depend on any
+   connection surviving backgrounding, only on browser timers resuming once the tab is
+   foregrounded again, which is far more consistently supported. Verified against a real
+   phone browser going through the full backgrounding round-trip.
 
 ## Registrar registration (what makes a real wallet actually trust the gate)
 
