@@ -67,18 +67,24 @@ public sealed class GateService
         Console.WriteLine("Provisioning the gate's access key-chain...");
         await GateClient.CreateKeyChainAsync(usageType: "access", type: "standalone", description: "Gate signing key", ct: ct);
 
-        Console.WriteLine($"Registering presentation config '{PresentationConfigId}' (age-over-18, PID SD-JWT)...");
+        Console.WriteLine($"Registering presentation config '{PresentationConfigId}' (birthdate, PID SD-JWT)...");
+        // Verified against a real German PID (Bundesdruckerei preprod) held in a real EUDI
+        // Wallet: it does not carry an `age_equal_or_over`/`age_over_18` claim at all — only
+        // `birthdate`. EUDIPLO's own demo assets request the former, which works against a
+        // simulator but not a real DE-PID. Requesting `birthdate` means the wallet discloses
+        // the exact date (no selective age-only disclosure is possible for this credential
+        // today) — the age-18 check itself happens server-side, in Program.cs's SSE handler.
         var presentationConfigJson = $$"""
             {
                 "id": "{{PresentationConfigId}}",
-                "description": "Access Control — proves the holder is 18+ without revealing their exact birthdate",
+                "description": "Access Control — verifies the holder's birthdate to confirm 18+ (the real DE-PID has no dedicated age-over-18 claim, so this discloses the exact date; age-18 is then checked server-side)",
                 "dcql_query": {
                     "credentials": [
                         {
                             "id": "pid-sd-jwt",
                             "format": "dc+sd-jwt",
                             "meta": { "vct_values": ["urn:eudi:pid:de:1"] },
-                            "claims": [ { "path": ["age_equal_or_over", "18"] } ]
+                            "claims": [ { "path": ["birthdate"] } ]
                         }
                     ]
                 },

@@ -14,6 +14,17 @@ API, which is the only piece that holds EUDIPLO credentials and uses `Eudiplo.Cl
 That's the point of the sample: showing where the client library actually sits in a real
 integration, not just calling its methods from a script.
 
+## Verified against a real EUDI Wallet
+
+This exact flow (tenant, key-chain, presentation config, `EnforceAgeGate` server-side
+check) has been run against a **real EUDI Wallet holding a real, Bundesdruckerei-issued
+German PID**, using a EUDIPLO instance registered with the German EUDI sandbox registrar
+(real Access + Registration Certificates, obtained fully via `Eudiplo.Client`'s
+`CreateAccessCertificateViaRegistrarAsync` — see `EudiploApiClient.Registrar.cs`). Result:
+`status: completed`, real `birthdate` disclosed, session `consumed`. Locally, without your
+own registrar registration, the flow runs identically up to the point of a real wallet
+scanning it — see "Completing the flow for real" below.
+
 - **`Backend/`** — ASP.NET Core minimal API. Provisions its own EUDIPLO tenant once at
   startup (a gate has a stable identity, unlike a per-request tenant), then exposes:
   - `POST /api/gate/sessions` — opens a presentation request, returns `{ sessionId, requestUrl }`.
@@ -73,15 +84,20 @@ npm run dev   # serves on :5173, proxies /api to :5050 — no CORS needed either
 
 ## Completing the flow for real
 
-The button opens a presentation request for an **age-over-18 check against a German PID
-SD-JWT credential** (`vct: urn:eudi:pid:de:1`) — same DCQL as EUDIPLO's own demo assets.
-Scanning the QR requires an EUDI Wallet holding one, e.g. the
-[DE-Sandbox-Wallet](https://sandbox.eudi-wallet.org). Without one, the gate still runs
-everything for real (tenant, key-chain, config, offer, live SSE connection) and the
-session simply expires after 120 seconds — the frontend shows that honestly rather than
-faking a result.
+The button opens a presentation request for the holder's **`birthdate`** from a German PID
+SD-JWT credential (`vct: urn:eudi:pid:de:1`) — the gate itself checks the age-18 threshold
+server-side (`EnforceAgeGate` in `Backend/Program.cs`) once the wallet discloses it; see
+"the real DE-PID has no age-only claim" below for why. Scanning the QR requires an EUDI
+Wallet holding one, e.g. the [DE-Sandbox-Wallet](https://sandbox.eudi-wallet.org). Without
+one, the gate still runs everything for real (tenant, key-chain, config, offer, live SSE
+connection) and the session simply expires after 120 seconds — the frontend shows that
+honestly rather than faking a result.
 
-## Why building this against a real server mattered (twice)
+Without your own registrar registration, a real wallet will still reject the gate's
+self-signed access certificate ("Could not trust certificate chain") — that's the one part
+of the flow that genuinely needs registrar-issued certificates (see below) to complete.
+
+## Why building this against a real server (and a real wallet) mattered, three times over
 
 1. **Creating a presentation offer 404s without an access key-chain first** — not
    documented anywhere, only found by running the original console version of this sample
@@ -93,6 +109,25 @@ faking a result.
    can't send custom headers, so the server had to be built that way). Our own fake mock
    couldn't have caught this — it only reflects back what we assumed. Fixed in
    `Eudiplo.Client` itself (`EudiploApiClient.Session.cs`), not just here.
+3. **The real DE-PID has no `age_over_18`/`age_equal_or_over` claim at all** — only
+   `birthdate`. EUDIPLO's own demo assets (and this sample, originally) request the former;
+   it works fine against a self-issued test credential, but a real Bundesdruckerei-issued
+   PID in a real wallet simply doesn't carry it. Selective age-only disclosure isn't
+   possible for this credential today — the gate now requests `birthdate` (full disclosure)
+   and checks the 18-year threshold itself.
+
+## Registrar registration (what makes a real wallet actually trust the gate)
+
+A self-signed access key-chain (what `GateService` provisions by default) makes a real EUDI
+Wallet reject the request outright — it has nothing to anchor trust to. `Eudiplo.Client`'s
+`EudiploApiClient.Registrar.cs` covers the fix EUDIPLO itself supports: register the
+tenant's registrar credentials once (`CreateRegistrarConfigAsync`, e.g. against the German
+sandbox registrar), then `CreateAccessCertificateViaRegistrarAsync(keyChainId)` gets a
+real, registrar-signed certificate — no manual dashboard cert-request flow needed. A
+presentation config's `registration_cert.body` field works the same way for the
+Registration Certificate, with claims auto-derived from the DCQL query. Requires your own
+relying-party registration with a EUDI wallet ecosystem's registrar — not something this
+sample can set up for you, which is why it isn't part of the default local flow.
 
 ## Known limitation
 

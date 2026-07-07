@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Eudiplo.Client;
 using Eudiplo.Client.Sample.AccessControl.Backend;
 
@@ -69,6 +70,9 @@ app.MapGet("/api/gate/sessions/{id}/events", async (string id, HttpContext ctx, 
         var isTerminal = status is "completed" or "failed" or "expired";
         var payload = isTerminal ? await gate.GateClient.GetSessionAsync(id, ct) ?? line : line;
 
+        if (status == "completed")
+            payload = EnforceAgeGate(payload!);
+
         await ctx.Response.WriteAsync($"data: {payload}\n\n", ct);
         await ctx.Response.Body.FlushAsync(ct);
 
@@ -78,3 +82,27 @@ app.MapGet("/api/gate/sessions/{id}/events", async (string id, HttpContext ctx, 
 
 Console.WriteLine("\nListening on http://localhost:5050");
 app.Run();
+
+// The real German PID has no dedicated age-over-18 claim (verified against a real EUDI
+// Wallet) — only `birthdate`, disclosed in full. EUDIPLO's "completed" only means "a
+// presentation was successfully verified", not "the holder is 18+" — that check is this
+// gate's own business logic, done here server-side on the disclosed date. Rewrites the
+// session JSON to `failed` (with an explanatory errorReason) when the holder is under 18,
+// so the frontend's existing granted/denied rendering needs no changes.
+static string EnforceAgeGate(string sessionJson)
+{
+    var session = JsonNode.Parse(sessionJson)!.AsObject();
+    var birthdateText = session["credentials"]?[0]?["values"]?[0]?["birthdate"]?.GetValue<string>();
+    if (birthdateText is null || !DateOnly.TryParse(birthdateText, out var birthdate))
+        return sessionJson;
+
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var age = today.Year - birthdate.Year;
+    if (birthdate > today.AddYears(-age)) age--;
+
+    if (age >= 18) return sessionJson;
+
+    session["status"] = "failed";
+    session["errorReason"] = $"Holder is under 18 (born {birthdateText}).";
+    return session.ToJsonString();
+}
