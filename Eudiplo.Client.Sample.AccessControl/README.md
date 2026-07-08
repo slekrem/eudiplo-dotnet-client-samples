@@ -40,11 +40,11 @@ scanning it — see "Completing the flow for real" below.
 
 ## 1. Start EUDIPLO
 
-Shared across every sample under `samples/` — see [`../README.md`](../README.md) if you
+Shared across every sample in this repo — see [`../README.md`](../README.md) if you
 haven't started it yet:
 
 ```bash
-cd samples
+cd ..
 cp .env.example .env   # if you haven't already
 docker compose up -d
 ```
@@ -52,7 +52,7 @@ docker compose up -d
 ## 2. Build the frontend
 
 ```bash
-cd samples/Eudiplo.Client.Sample.AccessControl/Frontend
+cd Eudiplo.Client.Sample.AccessControl/Frontend
 npm install
 npm run build
 ```
@@ -64,8 +64,8 @@ after any frontend change; there's no file-watcher wired into the backend.
 
 ```bash
 cd ../Backend
-export AUTH_CLIENT_ID=sample-root-client       # whatever you set in samples/.env
-export AUTH_CLIENT_SECRET=...                  # whatever you set in samples/.env
+export AUTH_CLIENT_ID=sample-root-client       # whatever you set in the repo root's .env
+export AUTH_CLIENT_SECRET=...                  # whatever you set in the repo root's .env
 dotnet run --project .
 ```
 

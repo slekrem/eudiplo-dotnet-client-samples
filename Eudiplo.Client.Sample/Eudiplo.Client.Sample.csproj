@@ -11,12 +11,9 @@
     <!-- Eudiplo.Client depends only on Microsoft.Extensions.DependencyInjection.Abstractions
          (IServiceCollection); a runnable entry point needs the concrete ServiceCollection,
          which this sample pulls in. Microsoft.Extensions.Http flows in transitively via the
-         ProjectReference below. -->
+         package reference below. -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Eudiplo.Client\Eudiplo.Client.csproj" />
+    <PackageReference Include="Eudiplo.Client" />
   </ItemGroup>
 
 </Project>

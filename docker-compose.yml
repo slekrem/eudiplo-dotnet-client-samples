@@ -1,4 +1,4 @@
-# One shared EUDIPLO instance (+ its admin UI) for every sample under samples/ — no
+# One shared EUDIPLO instance (+ its admin UI) for every sample in this repo — no
 # Postgres/MinIO/Vault, just the "minimal" profile (SQLite + local file storage) from
 # EUDIPLO's own deployment/docker-compose/.env.minimal.example.
 # Pinned to a specific tag rather than `latest` so the samples don't silently break

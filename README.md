@@ -1,5 +1,11 @@
 # Eudiplo.Client samples
 
+Runnable samples for [`Eudiplo.Client`](https://github.com/slekrem/eudiplo-dotnet-client)
+([NuGet](https://www.nuget.org/packages/Eudiplo.Client)) — an unofficial .NET HTTP client
+for [EUDIPLO](https://github.com/openwallet-foundation-labs/eudiplo). Each sample below
+references the published package, not a local source checkout, so it builds the way a
+real consumer would use it.
+
 EUDIPLO's own architecture diagram frames the integration point this client covers as
 "your services" — with **CRM**, **ERP**, and **Access Control System** as its own named
 examples ([source](https://github.com/openwallet-foundation-labs/eudiplo/blob/main/docs/overview.excalidraw.svg)):
@@ -39,7 +45,6 @@ All samples run against one shared EUDIPLO instance defined here (`docker-compos
 so you only start it once regardless of which sample(s) you run.
 
 ```bash
-cd samples
 cp .env.example .env
 # Edit .env: set MASTER_SECRET (openssl rand -base64 32) and AUTH_CLIENT_SECRET to real
 # random values. AUTH_CLIENT_ID can stay as-is or be anything you like.
@@ -52,4 +57,4 @@ while a sample runs.
 
 Then `cd` into whichever sample you want to run — see its own README for exact steps.
 
-Tear down when done: `docker compose down -v` (from this `samples/` directory).
+Tear down when done: `docker compose down -v` (from this repo's root).

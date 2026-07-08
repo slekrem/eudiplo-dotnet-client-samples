@@ -6,11 +6,11 @@ isolated tenant, then use that tenant's auto-generated admin client to create a 
 
 ## 1. Start EUDIPLO
 
-Shared across every sample under `samples/` — see [`../README.md`](../README.md) if you
+Shared across every sample in this repo — see [`../README.md`](../README.md) if you
 haven't started it yet:
 
 ```bash
-cd samples
+cd ..
 cp .env.example .env
 # Edit .env: set MASTER_SECRET (openssl rand -base64 32) and AUTH_CLIENT_SECRET to
 # real random values. AUTH_CLIENT_ID can stay as-is or be anything you like.
@@ -54,8 +54,8 @@ The sample deletes the tenant it created at the end, so it's safe to run repeate
 
 ## 3. Tear down
 
-From `samples/` (this stops the shared instance — only do this once you're done with every
-sample, not just this one):
+From this repo's root (this stops the shared instance — only do this once you're done with
+every sample, not just this one):
 
 ```bash
 docker compose down -v
