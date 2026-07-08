@@ -1,39 +1,29 @@
 # Eudiplo.Client sample
 
-Runs against a **real** EUDIPLO instance in Docker — not a mock — to demonstrate the
-multi-tenant flow this client is built around: authenticate as the root client, create an
-isolated tenant, then use that tenant's auto-generated admin client to create a key-chain.
+Runs against a **real** EUDIPLO instance — not a mock — to demonstrate the multi-tenant
+flow this client is built around: authenticate as the root client, create an isolated
+tenant, then use that tenant's auto-generated admin client to create a key-chain.
 
-## 1. Start EUDIPLO
+## 1. Point at your EUDIPLO instance
 
-Shared across every sample in this repo — see [`../../README.md`](../../README.md) if you
-haven't started it yet:
+See [`../../README.md`](../../README.md) for details:
 
 ```bash
-cd ../..
-cp .env.example .env
-# Edit .env: set MASTER_SECRET (openssl rand -base64 32) and AUTH_CLIENT_SECRET to
-# real random values. AUTH_CLIENT_ID can stay as-is or be anything you like.
-docker compose up -d
+export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
+export AUTH_CLIENT_ID=...
+export AUTH_CLIENT_SECRET=...
 ```
-
-Wait for it to become healthy (`docker compose ps`), or watch logs with
-`docker compose logs -f eudiplo`.
 
 ## 2. Run the sample
 
-Export the **same** root-client credentials you just put in `.env`:
-
 ```bash
-export AUTH_CLIENT_ID=sample-root-client       # whatever you set in .env
-export AUTH_CLIENT_SECRET=...                  # whatever you set in .env
 dotnet run --project .
 ```
 
 Expected output:
 
 ```
-Connecting to EUDIPLO at http://localhost:3000 ...
+Connecting to EUDIPLO at https://your-eudiplo-instance.example ...
 Found 0 existing tenant(s).
 
 Creating tenant 'sample-xxxxxxxxxxxxx' with an issuance-scoped admin client...
@@ -51,15 +41,3 @@ Done.
 new tenant, on top of the "access" one the sample creates explicitly.)
 
 The sample deletes the tenant it created at the end, so it's safe to run repeatedly.
-
-## 3. Tear down
-
-From this repo's root (this stops the shared instance — only do this once you're done with
-every sample, not just this one):
-
-```bash
-docker compose down -v
-```
-
-(`-v` also removes the named config volume — drop it if you want to keep EUDIPLO's state
-between runs.)

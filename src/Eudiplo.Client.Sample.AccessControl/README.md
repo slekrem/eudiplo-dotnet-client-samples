@@ -38,21 +38,20 @@ scanning it — see "Completing the flow for real" below.
   messages, plus a 3s polling fallback against `GET /api/gate/sessions/{id}` — see "why
   this mattered" below for why pure SSE alone wasn't enough on a real phone.
 
-## 1. Start EUDIPLO
+## 1. Point at your EUDIPLO instance
 
-Shared across every sample in this repo — see [`../../README.md`](../../README.md) if you
-haven't started it yet:
+See [`../../README.md`](../../README.md) for details:
 
 ```bash
-cd ../..
-cp .env.example .env   # if you haven't already
-docker compose up -d
+export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
+export AUTH_CLIENT_ID=...
+export AUTH_CLIENT_SECRET=...
 ```
 
 ## 2. Build the frontend
 
 ```bash
-cd src/Eudiplo.Client.Sample.AccessControl/Frontend
+cd Frontend
 npm install
 npm run build
 ```
@@ -64,10 +63,10 @@ after any frontend change; there's no file-watcher wired into the backend.
 
 ```bash
 cd ../Backend
-export AUTH_CLIENT_ID=sample-root-client       # whatever you set in the repo root's .env
-export AUTH_CLIENT_SECRET=...                  # whatever you set in the repo root's .env
 dotnet run --project .
 ```
+
+(uses the `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` exported in step 1)
 
 Startup provisions the gate's tenant, access key-chain, and presentation config against
 the real EUDIPLO instance — watch the console for each step. Once you see

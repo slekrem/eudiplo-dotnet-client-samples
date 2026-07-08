@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Runnable samples for [`Eudiplo.Client`](https://github.com/slekrem/eudiplo-dotnet-client) ([NuGet](https://www.nuget.org/packages/Eudiplo.Client)) — an unofficial .NET HTTP client for [EUDIPLO](https://github.com/openwallet-foundation-labs/eudiplo). Every sample references the **published NuGet package**, not a local source checkout, so it builds and behaves the way a real consumer of the client would experience it.
 
-Every sample runs against a **real, dockerized EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `src/Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
+Every sample runs against a **real EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `src/Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
+
+These samples don't provision EUDIPLO themselves — they expect an existing, network-reachable instance and root-client credentials for it, supplied via `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`. No Docker, no local `.env` file.
 
 EUDIPLO's architecture names the integration point this client covers as "your services" (CRM, ERP, Access Control System). Each sample picks one of these named examples and builds a realistic integration for it:
 
@@ -17,28 +19,21 @@ EUDIPLO's architecture names the integration point this client covers as "your s
 | `Eudiplo.Client.Sample.CRM` | Verified data via webhook → enrich a record | planned |
 | `Eudiplo.Client.Sample.ERP` | Issue a credential ("credential creation") | planned |
 
-## Shared EUDIPLO instance
+## Pointing at an EUDIPLO instance
 
-All samples share **one** EUDIPLO instance defined in the repo-root `docker-compose.yml` — start it once regardless of how many samples you run.
+Every sample needs the same three environment variables, pointing at your own running EUDIPLO instance:
 
 ```bash
-cp .env.example .env
-# Edit .env: set MASTER_SECRET (openssl rand -base64 32) and AUTH_CLIENT_SECRET to real
-# random values. AUTH_CLIENT_ID can stay as-is or be anything.
-docker compose up -d
-docker compose ps        # wait for healthy
-docker compose logs -f eudiplo   # if you need to watch startup
+export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
+export AUTH_CLIENT_ID=...      # your instance's root client id
+export AUTH_CLIENT_SECRET=...  # your instance's root client secret
 ```
 
-This also starts EUDIPLO's own admin UI at <http://localhost:4200> (log in with `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`).
-
-Tear down: `docker compose down -v` (from repo root; `-v` also drops the named config volume — only do this when done with every sample).
-
-The compose file pins EUDIPLO to an explicit image tag (currently `5.1.0`), not `latest` — bump deliberately.
+All three are required — the samples throw an `InvalidOperationException` at startup if any is unset (see each `Program.cs`).
 
 ## Build / run commands
 
-All project code lives under `src/`; the repo root holds only shared build/tooling config (`Directory.Build.props`, `Directory.Packages.props`, `global.json`, `docker-compose.yml`, etc.).
+All project code lives under `src/`; the repo root holds only shared build/tooling config (`Directory.Build.props`, `Directory.Packages.props`, `global.json`, etc.).
 
 Solution file: `Eudiplo.Client.Samples.slnx` (only includes the two .NET *executable* projects — the AccessControl frontend is a separate npm project, not part of the .sln).
 
@@ -49,8 +44,6 @@ dotnet build Eudiplo.Client.Samples.slnx
 ### `Eudiplo.Client.Sample` (generic console sample)
 
 ```bash
-export AUTH_CLIENT_ID=sample-root-client   # same value as in .env
-export AUTH_CLIENT_SECRET=...              # same value as in .env
 dotnet run --project src/Eudiplo.Client.Sample
 ```
 Creates a tenant, creates a key-chain as that tenant, then deletes the tenant — safe to re-run.
@@ -66,8 +59,6 @@ npm run build
 
 # 2. run the backend
 cd ../Backend
-export AUTH_CLIENT_ID=sample-root-client
-export AUTH_CLIENT_SECRET=...
 dotnet run --project .
 # → http://localhost:5050
 ```
@@ -78,7 +69,7 @@ cd src/Eudiplo.Client.Sample.AccessControl/Frontend
 npm run dev   # :5173, proxies /api to :5050, no CORS setup needed
 ```
 
-There are no automated test suites in this repo — verification is "run the sample against the real docker-composed EUDIPLO instance and observe the console output / browser behavior," as documented in each sample's README.
+There are no automated test suites in this repo — verification is "run the sample against a real EUDIPLO instance and observe the console output / browser behavior," as documented in each sample's README.
 
 ## Architecture
 

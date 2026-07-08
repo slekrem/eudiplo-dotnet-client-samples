@@ -1,16 +1,18 @@
 using Eudiplo.Client;
 using Microsoft.Extensions.DependencyInjection;
 
-// Runs against a REAL EUDIPLO instance (see docker-compose.yml in this folder) — not a
-// mock. Demonstrates the multi-tenant flow this client is built around: authenticate as
-// the tenant-less root client, create an isolated tenant, then use that tenant's
-// auto-generated admin client for a real business operation (creating a key-chain).
+// Runs against a REAL EUDIPLO instance — not a mock. Point EUDIPLO_BASE_URL at your own
+// running instance (see ../../README.md). Demonstrates the multi-tenant flow this client
+// is built around: authenticate as the tenant-less root client, create an isolated tenant,
+// then use that tenant's auto-generated admin client for a real business operation
+// (creating a key-chain).
 
-var baseUrl = Environment.GetEnvironmentVariable("EUDIPLO_BASE_URL") ?? "http://localhost:3000";
+var baseUrl = Environment.GetEnvironmentVariable("EUDIPLO_BASE_URL")
+    ?? throw new InvalidOperationException("Set EUDIPLO_BASE_URL (the URL of your EUDIPLO instance).");
 var rootClientId = Environment.GetEnvironmentVariable("AUTH_CLIENT_ID")
-    ?? throw new InvalidOperationException("Set AUTH_CLIENT_ID (same value as in your EUDIPLO .env).");
+    ?? throw new InvalidOperationException("Set AUTH_CLIENT_ID (your EUDIPLO instance's root client id).");
 var rootClientSecret = Environment.GetEnvironmentVariable("AUTH_CLIENT_SECRET")
-    ?? throw new InvalidOperationException("Set AUTH_CLIENT_SECRET (same value as in your EUDIPLO .env).");
+    ?? throw new InvalidOperationException("Set AUTH_CLIENT_SECRET (your EUDIPLO instance's root client secret).");
 
 var services = new ServiceCollection();
 services.AddEudiploClient(o =>

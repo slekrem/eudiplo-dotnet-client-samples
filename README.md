@@ -39,22 +39,16 @@ it has its own `Backend/` (the only piece using `Eudiplo.Client`) and `Frontend/
 (Lit + TypeScript UI) subfolders, since the point of that sample is showing the boundary
 between "your UI" and "your backend" from the diagram above.
 
-## Shared EUDIPLO instance
+## Pointing at an EUDIPLO instance
 
-All samples run against one shared EUDIPLO instance defined here (`docker-compose.yml`),
-so you only start it once regardless of which sample(s) you run.
+Every sample needs a running EUDIPLO instance and root-client credentials for it — these
+samples don't provision one for you. Set these three environment variables before running
+any sample:
 
 ```bash
-cp .env.example .env
-# Edit .env: set MASTER_SECRET (openssl rand -base64 32) and AUTH_CLIENT_SECRET to real
-# random values. AUTH_CLIENT_ID can stay as-is or be anything you like.
-docker compose up -d
+export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
+export AUTH_CLIENT_ID=...      # your instance's root client id
+export AUTH_CLIENT_SECRET=...  # your instance's root client secret
 ```
 
-This also starts EUDIPLO's own admin UI at <http://localhost:4200> (log in with the
-`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` from your `.env`) if you want to poke around visually
-while a sample runs.
-
 Then `cd` into whichever sample under `src/` you want to run — see its own README for exact steps.
-
-Tear down when done: `docker compose down -v` (from this repo's root).

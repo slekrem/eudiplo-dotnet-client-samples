@@ -10,8 +10,8 @@ updates:
     schedule:
       interval: weekly
 
-  - package-ecosystem: docker-compose
-    directory: /
+  - package-ecosystem: docker
+    directory: /src/Eudiplo.Client.Sample.AccessControl/Backend
     schedule:
       interval: weekly
 
