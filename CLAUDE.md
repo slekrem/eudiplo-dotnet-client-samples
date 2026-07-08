@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Runnable samples for [`Eudiplo.Client`](https://github.com/slekrem/eudiplo-dotnet-client) ([NuGet](https://www.nuget.org/packages/Eudiplo.Client)) — an unofficial .NET HTTP client for [EUDIPLO](https://github.com/openwallet-foundation-labs/eudiplo). Every sample references the **published NuGet package**, not a local source checkout, so it builds and behaves the way a real consumer of the client would experience it.
 
-Every sample runs against a **real, dockerized EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
+Every sample runs against a **real, dockerized EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `src/Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
 
 EUDIPLO's architecture names the integration point this client covers as "your services" (CRM, ERP, Access Control System). Each sample picks one of these named examples and builds a realistic integration for it:
 
@@ -38,6 +38,8 @@ The compose file pins EUDIPLO to an explicit image tag (currently `5.1.0`), not 
 
 ## Build / run commands
 
+All project code lives under `src/`; the repo root holds only shared build/tooling config (`Directory.Build.props`, `Directory.Packages.props`, `global.json`, `docker-compose.yml`, etc.).
+
 Solution file: `Eudiplo.Client.Samples.slnx` (only includes the two .NET *executable* projects — the AccessControl frontend is a separate npm project, not part of the .sln).
 
 ```bash
@@ -49,7 +51,7 @@ dotnet build Eudiplo.Client.Samples.slnx
 ```bash
 export AUTH_CLIENT_ID=sample-root-client   # same value as in .env
 export AUTH_CLIENT_SECRET=...              # same value as in .env
-dotnet run --project Eudiplo.Client.Sample
+dotnet run --project src/Eudiplo.Client.Sample
 ```
 Creates a tenant, creates a key-chain as that tenant, then deletes the tenant — safe to re-run.
 
@@ -58,7 +60,7 @@ Creates a tenant, creates a key-chain as that tenant, then deletes the tenant �
 ```bash
 # 1. build the frontend (outputs into ../Backend/wwwroot — the backend serves it from there;
 #    re-run after any frontend change, there's no watcher wired into the backend)
-cd Eudiplo.Client.Sample.AccessControl/Frontend
+cd src/Eudiplo.Client.Sample.AccessControl/Frontend
 npm install
 npm run build
 
@@ -72,7 +74,7 @@ dotnet run --project .
 
 For frontend edit-and-reload without rebuilding into `wwwroot`, run the Vite dev server instead of `npm run build`:
 ```bash
-cd Eudiplo.Client.Sample.AccessControl/Frontend
+cd src/Eudiplo.Client.Sample.AccessControl/Frontend
 npm run dev   # :5173, proxies /api to :5050, no CORS setup needed
 ```
 

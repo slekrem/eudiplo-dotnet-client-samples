@@ -10,9 +10,9 @@ using Eudiplo.Client.Sample.AccessControl.Backend;
 
 var baseUrl = Environment.GetEnvironmentVariable("EUDIPLO_BASE_URL") ?? "http://localhost:3000";
 var rootClientId = Environment.GetEnvironmentVariable("AUTH_CLIENT_ID")
-    ?? throw new InvalidOperationException("Set AUTH_CLIENT_ID (same value as in samples/.env).");
+    ?? throw new InvalidOperationException("Set AUTH_CLIENT_ID (same value as in the repo root's .env).");
 var rootClientSecret = Environment.GetEnvironmentVariable("AUTH_CLIENT_SECRET")
-    ?? throw new InvalidOperationException("Set AUTH_CLIENT_SECRET (same value as in samples/.env).");
+    ?? throw new InvalidOperationException("Set AUTH_CLIENT_SECRET (same value as in the repo root's .env).");
 var tenantId = Environment.GetEnvironmentVariable("GATE_TENANT_ID") ?? "access-control-gate";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +40,7 @@ try
 catch (Exception ex)
 {
     Console.Error.WriteLine($"\nFailed to provision the gate: {ex.Message}");
-    Console.Error.WriteLine("Is EUDIPLO running? See ../README.md (samples/docker-compose.yml).");
+    Console.Error.WriteLine("Is EUDIPLO running? See ../README.md (docker-compose.yml at the repo root).");
     Environment.Exit(1);
 }
 

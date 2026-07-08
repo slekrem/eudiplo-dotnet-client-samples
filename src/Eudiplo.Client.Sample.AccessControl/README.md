@@ -40,11 +40,11 @@ scanning it — see "Completing the flow for real" below.
 
 ## 1. Start EUDIPLO
 
-Shared across every sample in this repo — see [`../README.md`](../README.md) if you
+Shared across every sample in this repo — see [`../../README.md`](../../README.md) if you
 haven't started it yet:
 
 ```bash
-cd ..
+cd ../..
 cp .env.example .env   # if you haven't already
 docker compose up -d
 ```
@@ -52,7 +52,7 @@ docker compose up -d
 ## 2. Build the frontend
 
 ```bash
-cd Eudiplo.Client.Sample.AccessControl/Frontend
+cd src/Eudiplo.Client.Sample.AccessControl/Frontend
 npm install
 npm run build
 ```

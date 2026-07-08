@@ -6,7 +6,7 @@ updates:
       interval: weekly
 
   - package-ecosystem: npm
-    directory: /Eudiplo.Client.Sample.AccessControl/Frontend
+    directory: /src/Eudiplo.Client.Sample.AccessControl/Frontend
     schedule:
       interval: weekly
 

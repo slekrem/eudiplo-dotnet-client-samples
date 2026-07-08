@@ -86,7 +86,7 @@ public sealed class GateService
             tenantClientSecret);
 
         // A presentation request must be signed with the tenant's access certificate — EUDIPLO
-        // 404s at offer-creation time otherwise (see samples/Eudiplo.Client.Sample.AccessControl).
+        // 404s at offer-creation time otherwise (see src/Eudiplo.Client.Sample.AccessControl).
         Console.WriteLine("Provisioning the gate's access key-chain...");
         await GateClient.CreateKeyChainAsync(usageType: "access", type: "standalone", description: "Gate signing key", ct: ct);
 

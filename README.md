@@ -29,8 +29,8 @@ pattern for it, using only `Eudiplo.Client` — against a **real** EUDIPLO insta
 
 | Sample | Pattern | Status |
 |---|---|---|
-| [`Eudiplo.Client.Sample`](Eudiplo.Client.Sample) | Generic: root client → tenant → key-chain | ✅ |
-| [`Eudiplo.Client.Sample.AccessControl`](Eudiplo.Client.Sample.AccessControl) | 3-tier gate: Lit+TS UI → ASP.NET backend → EUDIPLO | ✅ |
+| [`Eudiplo.Client.Sample`](src/Eudiplo.Client.Sample) | Generic: root client → tenant → key-chain | ✅ |
+| [`Eudiplo.Client.Sample.AccessControl`](src/Eudiplo.Client.Sample.AccessControl) | 3-tier gate: Lit+TS UI → ASP.NET backend → EUDIPLO | ✅ |
 | `Eudiplo.Client.Sample.CRM` | Verified data via webhook → enrich a record | planned |
 | `Eudiplo.Client.Sample.ERP` | Issue a credential ("credential creation") | planned |
 
@@ -55,6 +55,6 @@ This also starts EUDIPLO's own admin UI at <http://localhost:4200> (log in with 
 `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` from your `.env`) if you want to poke around visually
 while a sample runs.
 
-Then `cd` into whichever sample you want to run — see its own README for exact steps.
+Then `cd` into whichever sample under `src/` you want to run — see its own README for exact steps.
 
 Tear down when done: `docker compose down -v` (from this repo's root).

@@ -7,15 +7,15 @@
 # walking up from the project file (ImplicitUsings, Nullable, central package versions,
 # the nuget.org-only package source); without them in the build context, the restore
 # either fails to resolve Eudiplo.Client's version or basic BCL types fail to resolve:
-#   docker build -f Eudiplo.Client.Sample.AccessControl/Backend/Dockerfile -t gate-backend .
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+#   docker build -f src/Eudiplo.Client.Sample.AccessControl/Backend/Dockerfile -t gate-backend .
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props NuGet.Config ./
-COPY Eudiplo.Client.Sample.AccessControl/Backend/ Eudiplo.Client.Sample.AccessControl/Backend/
+COPY src/Eudiplo.Client.Sample.AccessControl/Backend/ Eudiplo.Client.Sample.AccessControl/Backend/
 WORKDIR /src/Eudiplo.Client.Sample.AccessControl/Backend
 RUN dotnet publish -c Release -o /app --self-contained false
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "Eudiplo.Client.Sample.AccessControl.Backend.dll"]
