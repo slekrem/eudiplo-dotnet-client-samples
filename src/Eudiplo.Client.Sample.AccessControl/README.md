@@ -21,12 +21,14 @@ check) has been run against a **real EUDI Wallet holding a real, Bundesdruckerei
 German PID**, using a EUDIPLO instance registered with the German EUDI sandbox registrar
 (real Access + Registration Certificates, obtained fully via `Eudiplo.Client`'s
 `CreateAccessCertificateViaRegistrarAsync` — see `EudiploApiClient.Registrar.cs`). Result:
-`status: completed`, real `birthdate` disclosed, session `consumed`. Locally, without your
-own registrar registration, the flow runs identically up to the point of a real wallet
-scanning it — see "Completing the flow for real" below.
+`status: completed`, real `birthdate` disclosed, session `consumed`. If your tenant's access
+key-chain isn't registrar-signed, the flow runs identically up to the point of a real wallet
+scanning it (which will then reject the certificate) — see "Completing the flow for real"
+below.
 
-- **`Backend/`** — ASP.NET Core minimal API. Provisions its own EUDIPLO tenant once at
-  startup (a gate has a stable identity, unlike a per-request tenant), then exposes:
+- **`Backend/`** — ASP.NET Core minimal API. Talks to a single, already-provisioned
+  EUDIPLO tenant for its whole lifetime — it never creates, deletes, or reconfigures
+  anything in EUDIPLO itself (see "Point at your EUDIPLO instance" below). Exposes:
   - `POST /api/gate/sessions` — opens a presentation request, returns `{ sessionId, requestUrl }`.
   - `GET /api/gate/sessions/{id}/events` — Server-Sent Events passthrough of
     `EudiploApiClient.SubscribeToSessionEventsAsync`, enriched with the full session
@@ -40,12 +42,21 @@ scanning it — see "Completing the flow for real" below.
 
 ## 1. Point at your EUDIPLO instance
 
-See [`../../README.md`](../../README.md) for details:
+Unlike the generic sample, this backend **never provisions anything in EUDIPLO** — no
+tenant, no key-chain, no presentation config. `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` here
+are a specific **tenant's** own client credentials (not a tenant-less root client), and
+that tenant must already have, before you start this backend:
+
+- an access key-chain (ideally registrar-signed — see "Registrar registration" below;
+  a self-signed one makes a real wallet reject the request outright)
+- a presentation config with id `access-control-age-check` requesting `birthdate` from
+  `urn:eudi:pid:de:1` (see the `dcql_query` shape a few sections down, or the
+  `PresentationConfigId` constant in `Backend/Program.cs`)
 
 ```bash
 export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
-export AUTH_CLIENT_ID=...
-export AUTH_CLIENT_SECRET=...
+export AUTH_CLIENT_ID=...      # the gate tenant's own client id
+export AUTH_CLIENT_SECRET=...  # the gate tenant's own client secret
 ```
 
 ## 2. Build the frontend
@@ -68,14 +79,8 @@ dotnet run --project .
 
 (uses the `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` exported in step 1)
 
-Startup provisions the gate's tenant, access key-chain, and presentation config against
-the real EUDIPLO instance — watch the console for each step. Once you see
+Startup just connects — no provisioning happens. Once you see
 `Listening on http://localhost:5050`, open that URL in a browser.
-
-Set `GATE_CLIENT_ID`/`GATE_CLIENT_SECRET` instead to point this backend at an
-already-provisioned tenant (e.g. one with a real registrar-issued access certificate, see
-"Registrar registration" below) — skips all of the above and reuses that tenant as-is; see
-`GateService.InitializeAsync`'s doc comment.
 
 ## Live frontend development
 
@@ -94,13 +99,13 @@ SD-JWT credential (`vct: urn:eudi:pid:de:1`) — the gate itself checks the age-
 server-side (`EnforceAgeGate` in `Backend/Program.cs`) once the wallet discloses it; see
 "the real DE-PID has no age-only claim" below for why. Scanning the QR requires an EUDI
 Wallet holding one, e.g. the [DE-Sandbox-Wallet](https://sandbox.eudi-wallet.org). Without
-one, the gate still runs everything for real (tenant, key-chain, config, offer, live SSE
+one, the gate still runs everything for real against your tenant (offer, live SSE
 connection) and the session simply expires after 120 seconds — the frontend shows that
 honestly rather than faking a result.
 
-Without your own registrar registration, a real wallet will still reject the gate's
-self-signed access certificate ("Could not trust certificate chain") — that's the one part
-of the flow that genuinely needs registrar-issued certificates (see below) to complete.
+If your tenant's access key-chain is self-signed rather than registrar-signed, a real
+wallet will reject it outright ("Could not trust certificate chain") — that's the one part
+of the flow that genuinely needs a registrar-issued certificate (see below) to complete.
 
 ## Why building this against a real server (and a real wallet) mattered, five times over
 
@@ -138,21 +143,14 @@ of the flow that genuinely needs registrar-issued certificates (see below) to co
 
 ## Registrar registration (what makes a real wallet actually trust the gate)
 
-A self-signed access key-chain (what `GateService` provisions by default) makes a real EUDI
-Wallet reject the request outright — it has nothing to anchor trust to. `Eudiplo.Client`'s
-`EudiploApiClient.Registrar.cs` covers the fix EUDIPLO itself supports: register the
-tenant's registrar credentials once (`CreateRegistrarConfigAsync`, e.g. against the German
-sandbox registrar), then `CreateAccessCertificateViaRegistrarAsync(keyChainId)` gets a
-real, registrar-signed certificate — no manual dashboard cert-request flow needed. A
-presentation config's `registration_cert.body` field works the same way for the
-Registration Certificate, with claims auto-derived from the DCQL query. Requires your own
-relying-party registration with a EUDI wallet ecosystem's registrar — not something this
-sample can set up for you, which is why it isn't part of the default local flow.
-
-## Known limitation
-
-The tenant admin client's secret is only ever returned once, at creation time — EUDIPLO
-has no way to re-fetch it later. So the backend can't restore a previous tenant across a
-restart; it deletes any leftover tenant with the same id and creates a fresh one every
-time it starts. Fine for a sample; a production gate would persist the tenant credentials
-in a secret store instead.
+A self-signed access key-chain makes a real EUDI Wallet reject the request outright — it
+has nothing to anchor trust to. `Eudiplo.Client`'s `EudiploApiClient.Registrar.cs` covers
+the fix EUDIPLO itself supports: register the tenant's registrar credentials once
+(`CreateRegistrarConfigAsync`, e.g. against the German sandbox registrar), then
+`CreateAccessCertificateViaRegistrarAsync(keyChainId)` gets a real, registrar-signed
+certificate — no manual dashboard cert-request flow needed. A presentation config's
+`registration_cert.body` field works the same way for the Registration Certificate, with
+claims auto-derived from the DCQL query. Requires your own relying-party registration with
+a EUDI wallet ecosystem's registrar. This backend doesn't call any of this itself (see "1.
+Point at your EUDIPLO instance" above) — set it up once against your tenant, outside of
+this sample, before running it.

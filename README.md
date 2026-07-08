@@ -41,14 +41,17 @@ between "your UI" and "your backend" from the diagram above.
 
 ## Pointing at an EUDIPLO instance
 
-Every sample needs a running EUDIPLO instance and root-client credentials for it — these
+Every sample needs a running EUDIPLO instance and client credentials for it — these
 samples don't provision one for you. Set these three environment variables before running
 any sample:
 
 ```bash
 export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
-export AUTH_CLIENT_ID=...      # your instance's root client id
-export AUTH_CLIENT_SECRET=...  # your instance's root client secret
+export AUTH_CLIENT_ID=...
+export AUTH_CLIENT_SECRET=...
 ```
+
+What kind of client `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` need to be (a tenant-less root
+client, or a specific tenant's own client) differs per sample — see its own README.
 
 Then `cd` into whichever sample under `src/` you want to run — see its own README for exact steps.
