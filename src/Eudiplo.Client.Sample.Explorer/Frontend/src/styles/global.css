@@ -231,8 +231,8 @@ button:disabled {
 /* --- Results grid --- */
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 18px;
 }
 
