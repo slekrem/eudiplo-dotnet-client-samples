@@ -28,11 +28,26 @@ of read-only "basic info" endpoints independently and shows exactly what each re
 - `GetVerifierConfigsAsync` — presentation configs
 - `GetCredentialConfigsAsync` — issuance/credential configs
 - `GetUsersAsync` — human users
+- `GetWebhookEndpointsAsync` — configured webhook endpoints
+- `GetTrustListsAsync` — trust lists
+- `GetStatusListsAsync` — credential status lists
+- `GetRegistrarConfigAsync` — the tenant's registrar registration (see "Registrar
+  registration" in the AccessControl sample's README for what this is and why it matters)
 
 Each is caught independently server-side (see `QueryAsync` in
 `Backend/Services/EudiploExplorerService.cs`), so one query failing (e.g. a 403 for a role
 the given credentials don't hold) doesn't take down the rest of the dashboard — the
 frontend just shows that section's error inline.
+
+`GetRegistrarConfigAsync` returns a JSON-encoded *string*, not a parsed object like the
+others — `EudiploExplorerService` parses it before returning, so it renders as labeled
+fields like everything else instead of one long escaped-JSON line. EUDIPLO itself already
+omits the actual secret from this payload (`clientSecret` comes back `null`), so nothing
+sensitive ends up on screen either way.
+
+Deliberately **not** queried: `GetSessionsAsync`. Sessions can carry real disclosed wallet
+claims (birthdates, etc.) once completed — showing those in a general-purpose exploration
+tool isn't something this sample does.
 
 ## 1. Build the frontend
 

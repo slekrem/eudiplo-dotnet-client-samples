@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Eudiplo.Client;
 
 namespace Eudiplo.Client.Sample.Explorer.Backend.Models;
 
@@ -13,4 +15,8 @@ public sealed record ExploreResult(
     QueryResult<IReadOnlyList<JsonElement>> Clients,
     QueryResult<IReadOnlyList<JsonElement>> VerifierConfigs,
     QueryResult<IReadOnlyList<JsonElement>> CredentialConfigs,
-    QueryResult<IReadOnlyList<JsonElement>> Users);
+    QueryResult<IReadOnlyList<JsonElement>> Users,
+    QueryResult<IReadOnlyList<JsonElement>> WebhookEndpoints,
+    QueryResult<IReadOnlyList<EudiploTrustList>> TrustLists,
+    QueryResult<IReadOnlyList<JsonElement>> StatusLists,
+    QueryResult<JsonNode?> RegistrarConfig);

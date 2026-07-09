@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Eudiplo.Client;
 using Eudiplo.Client.Sample.Explorer.Backend.Models;
 
@@ -29,7 +30,20 @@ public sealed class EudiploExplorerService(IHttpClientFactory httpClientFactory)
             Clients: await QueryAsync(() => client.GetClientsAsync(ct)),
             VerifierConfigs: await QueryAsync(() => client.GetVerifierConfigsAsync(ct)),
             CredentialConfigs: await QueryAsync(() => client.GetCredentialConfigsAsync(ct)),
-            Users: await QueryAsync(() => client.GetUsersAsync(ct)));
+            Users: await QueryAsync(() => client.GetUsersAsync(ct)),
+            WebhookEndpoints: await QueryAsync(() => client.GetWebhookEndpointsAsync(ct)),
+            TrustLists: await QueryAsync(() => client.GetTrustListsAsync(ct)),
+            StatusLists: await QueryAsync(() => client.GetStatusListsAsync(ct)),
+            RegistrarConfig: await QueryAsync(async () =>
+            {
+                // Returned as a raw JSON string, not a deserialized type — parse it so the
+                // frontend's generic object renderer shows labeled fields instead of one
+                // long escaped-JSON string. EUDIPLO already omits the actual secret value
+                // from this payload (clientSecret comes back null), so nothing sensitive
+                // ends up on screen.
+                var json = await client.GetRegistrarConfigAsync(ct);
+                return string.IsNullOrEmpty(json) ? null : JsonNode.Parse(json);
+            }));
     }
 
     // Runs one EUDIPLO query in isolation — a tenant client typically doesn't hold every

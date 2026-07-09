@@ -143,19 +143,28 @@ convention:
   `new EudiploApiClient(http, clientId, clientSecret)` directly — built fresh per call,
   discarded after.
 - **`Models/ExploreModels.cs`** — `ExploreRequest` (the request body), `QueryResult<T>`
-  (one query's outcome), `ExploreResult` (the six named `QueryResult<T>` fields returned to
+  (one query's outcome), `ExploreResult` (the ten named `QueryResult<T>` fields returned to
   the frontend).
 
-`ExploreAsync` queries six endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
-`GetClientsAsync`, `GetVerifierConfigsAsync`, `GetCredentialConfigsAsync`,
-`GetUsersAsync`) through a private `QueryAsync<T>` wrapper that catches per-call, not
-globally — a tenant client rarely holds every EUDIPLO role, so partial failure (some
+`ExploreAsync` queries ten endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
+`GetClientsAsync`, `GetVerifierConfigsAsync`, `GetCredentialConfigsAsync`, `GetUsersAsync`,
+`GetWebhookEndpointsAsync`, `GetTrustListsAsync`, `GetStatusListsAsync`,
+`GetRegistrarConfigAsync`) through a private `QueryAsync<T>` wrapper that catches per-call,
+not globally — a tenant client rarely holds every EUDIPLO role, so partial failure (some
 sections `403`, others succeed) is the expected case, not an edge case. `ExploreResult` is
 a concrete named record (not an anonymous type) for the C# side's sake — it still
 serializes to the same JSON shape either way, an object keyed by query name
 (`{ "keyChains": { "ok": true, "data": [...] }, ... }`). The frontend (`explorer-app.ts`)
 renders that generically by iterating `Object.entries(...)` and humanizing each key —
 adding a query server-side needs no matching frontend change.
+
+`GetRegistrarConfigAsync` is the odd one out: it returns a JSON-encoded `string`, not
+already-deserialized data like the other nine. `EudiploExplorerService` parses it with
+`JsonNode.Parse` before putting it in the result, specifically so `json-view.ts` renders it
+as labeled fields instead of one long escaped-JSON string. Deliberately not queried:
+`GetSessionsAsync` — completed sessions can carry real disclosed wallet claims (birthdates,
+etc.), and surfacing those in a general-purpose exploration tool was ruled out on purpose,
+not an oversight.
 
 ### `Eudiplo.Client.Sample.Explorer`'s frontend: components + a deliberate visual concept
 
