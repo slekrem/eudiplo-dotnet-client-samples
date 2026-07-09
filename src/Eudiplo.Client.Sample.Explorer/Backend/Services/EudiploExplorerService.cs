@@ -1,6 +1,7 @@
 using Eudiplo.Client;
+using Eudiplo.Client.Sample.Explorer.Backend.Models;
 
-namespace Eudiplo.Client.Sample.Explorer.Backend;
+namespace Eudiplo.Client.Sample.Explorer.Backend.Services;
 
 /// <summary>
 /// Builds a fresh <see cref="EudiploApiClient"/> per call and queries a handful of

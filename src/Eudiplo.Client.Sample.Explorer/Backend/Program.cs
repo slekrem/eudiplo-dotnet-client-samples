@@ -1,4 +1,5 @@
-using Eudiplo.Client.Sample.Explorer.Backend;
+using Eudiplo.Client.Sample.Explorer.Backend.Endpoints;
+using Eudiplo.Client.Sample.Explorer.Backend.Services;
 
 // Eudiplo.Client.Sample.Explorer/Backend — a small "point it at any EUDIPLO tenant and see
 // what's reachable" dashboard. Unlike every other sample in this repo, credentials aren't

@@ -30,9 +30,9 @@ of read-only "basic info" endpoints independently and shows exactly what each re
 - `GetUsersAsync` — human users
 
 Each is caught independently server-side (see `QueryAsync` in
-`Backend/EudiploExplorerService.cs`), so one query failing (e.g. a 403 for a role the given
-credentials don't hold) doesn't take down the rest of the dashboard — the frontend just
-shows that section's error inline.
+`Backend/Services/EudiploExplorerService.cs`), so one query failing (e.g. a 403 for a role
+the given credentials don't hold) doesn't take down the rest of the dashboard — the
+frontend just shows that section's error inline.
 
 ## 1. Build the frontend
 
@@ -67,12 +67,14 @@ npm run dev   # serves on :5173, proxies /api to :5070 — no CORS needed either
 ## Code layout
 
 `Backend/Program.cs` is a thin composition root — builder setup, DI registration, endpoint
-mapping, `app.Run()`. Everything else lives in its own file:
+mapping, `app.Run()`. Everything else is grouped into folders by responsibility (namespace
+matches folder):
 
-- `ExploreEndpoints.cs` — the `POST /api/explore` route and its request validation.
-- `EudiploExplorerService.cs` — the actual EUDIPLO-querying logic, DI-registered as a
-  singleton (it's stateless).
-- `ExploreModels.cs` — the request/response record types.
+- `Endpoints/ExploreEndpoints.cs` — the `POST /api/explore` route and its request
+  validation.
+- `Services/EudiploExplorerService.cs` — the actual EUDIPLO-querying logic, DI-registered
+  as a singleton (it's stateless).
+- `Models/ExploreModels.cs` — the request/response record types.
 
 ## Why this sample skips `AddEudiploClient`
 

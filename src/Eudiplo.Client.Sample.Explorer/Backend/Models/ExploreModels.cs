@@ -1,10 +1,10 @@
 using System.Text.Json;
 
-namespace Eudiplo.Client.Sample.Explorer.Backend;
+namespace Eudiplo.Client.Sample.Explorer.Backend.Models;
 
 public sealed record ExploreRequest(string BaseUrl, string ClientId, string ClientSecret);
 
-/// <summary>Result of one EUDIPLO query, isolated from the others — see <see cref="EudiploExplorerService"/>.</summary>
+/// <summary>Result of one EUDIPLO query, isolated from the others — see <c>EudiploExplorerService</c>.</summary>
 public sealed record QueryResult<T>(bool Ok, T? Data, string? Error);
 
 public sealed record ExploreResult(

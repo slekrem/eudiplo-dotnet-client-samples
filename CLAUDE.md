@@ -121,18 +121,19 @@ Non-obvious constraints baked into this code (don't "fix" these without re-readi
 ### `Eudiplo.Client.Sample.Explorer`: one `EudiploApiClient` per request, not per process
 
 Unlike AccessControl, this backend's `Program.cs` is a thin composition root only — no
-inline endpoint logic, no inline DTOs. Responsibilities are split by file, current
-minimal-API convention:
+inline endpoint logic, no inline DTOs. Responsibilities are split into folders (namespace
+matches folder, e.g. `Eudiplo.Client.Sample.Explorer.Backend.Services`), current minimal-API
+convention:
 
 - **`Program.cs`** — builder setup, DI registration (`AddHttpClient()`,
   `AddSingleton<EudiploExplorerService>()`), `app.MapExploreEndpoints()`, `app.Run()`. Reads
   top to bottom as a summary of what the app does, not how.
-- **`ExploreEndpoints.cs`** — `MapExploreEndpoints(this IEndpointRouteBuilder)` extension
-  method + the `POST /api/explore` handler. Owns HTTP concerns only: request validation
-  (blank fields, malformed `baseUrl`) and translating the service's result into
+- **`Endpoints/ExploreEndpoints.cs`** — `MapExploreEndpoints(this IEndpointRouteBuilder)`
+  extension method + the `POST /api/explore` handler. Owns HTTP concerns only: request
+  validation (blank fields, malformed `baseUrl`) and translating the service's result into
   `Results.Ok`/`Results.BadRequest`.
-- **`EudiploExplorerService.cs`** — the actual EUDIPLO-querying logic, injected via DI
-  (registered as a singleton — it's stateless, nothing about a call survives past
+- **`Services/EudiploExplorerService.cs`** — the actual EUDIPLO-querying logic, injected
+  via DI (registered as a singleton — it's stateless, nothing about a call survives past
   `ExploreAsync`'s return). This is where `AddEudiploClient` gets skipped: every other
   sample calls `services.AddEudiploClient(o => { o.BaseUrl = ...; ... })` once at startup,
   which configures a named `HttpClient`'s base address from a URL that's already known.
@@ -141,9 +142,9 @@ minimal-API convention:
   `IHttpClientFactory`, sets `.BaseAddress` to the caller-supplied URL, and constructs
   `new EudiploApiClient(http, clientId, clientSecret)` directly — built fresh per call,
   discarded after.
-- **`ExploreModels.cs`** — `ExploreRequest` (the request body), `QueryResult<T>` (one
-  query's outcome), `ExploreResult` (the six named `QueryResult<T>` fields returned to the
-  frontend).
+- **`Models/ExploreModels.cs`** — `ExploreRequest` (the request body), `QueryResult<T>`
+  (one query's outcome), `ExploreResult` (the six named `QueryResult<T>` fields returned to
+  the frontend).
 
 `ExploreAsync` queries six endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
 `GetClientsAsync`, `GetVerifierConfigsAsync`, `GetCredentialConfigsAsync`,

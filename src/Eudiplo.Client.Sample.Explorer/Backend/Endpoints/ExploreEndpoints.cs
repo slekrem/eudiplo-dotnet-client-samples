@@ -1,4 +1,7 @@
-namespace Eudiplo.Client.Sample.Explorer.Backend;
+using Eudiplo.Client.Sample.Explorer.Backend.Models;
+using Eudiplo.Client.Sample.Explorer.Backend.Services;
+
+namespace Eudiplo.Client.Sample.Explorer.Backend.Endpoints;
 
 public static class ExploreEndpoints
 {
