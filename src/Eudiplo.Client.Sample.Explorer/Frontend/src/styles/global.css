@@ -228,6 +228,33 @@ button:disabled {
   max-width: 480px;
 }
 
+.results-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.clear-btn {
+  align-self: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--ink-line);
+  color: var(--ink-text-muted);
+}
+
+.clear-btn:hover {
+  filter: none;
+  color: var(--ink-text);
+  border-color: var(--brass);
+}
+
 /* --- Results grid --- */
 
 .grid {

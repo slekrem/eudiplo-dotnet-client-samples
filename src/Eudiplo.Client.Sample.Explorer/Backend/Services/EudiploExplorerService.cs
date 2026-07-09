@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Nodes;
 using Eudiplo.Client;
 using Eudiplo.Client.Sample.Explorer.Backend.Models;
@@ -59,7 +60,28 @@ public sealed class EudiploExplorerService(IHttpClientFactory httpClientFactory)
         }
         catch (Exception ex)
         {
-            return new QueryResult<T>(false, default, ex.Message);
+            return new QueryResult<T>(false, default, DescribeError(ex));
         }
     }
+
+    // EudiploApiClient throws via HttpResponseMessage.EnsureSuccessStatusCode() on a
+    // non-success response, whose default message ("Response status code does not
+    // indicate success: 401 (Unauthorized).") is accurate but not something a developer
+    // can act on at a glance. Translates the status codes actually worth distinguishing;
+    // anything else (including a genuinely unexpected exception type) falls back to the
+    // exception's own message rather than hiding it.
+    private static string DescribeError(Exception ex) => ex switch
+    {
+        HttpRequestException { StatusCode: HttpStatusCode.Unauthorized } =>
+            "Authentication failed — check the client ID and secret.",
+        HttpRequestException { StatusCode: HttpStatusCode.Forbidden } =>
+            "Not authorized — this client doesn't hold the role this needs.",
+        HttpRequestException { StatusCode: HttpStatusCode.NotFound } =>
+            "Not found on this EUDIPLO instance.",
+        HttpRequestException { StatusCode: { } status } when (int)status >= 500 =>
+            $"The EUDIPLO server returned an error ({(int)status}).",
+        HttpRequestException =>
+            "Couldn't reach this EUDIPLO instance — check the base URL.",
+        _ => ex.Message,
+    };
 }
