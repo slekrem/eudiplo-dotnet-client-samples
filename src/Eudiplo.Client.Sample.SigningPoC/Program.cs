@@ -11,14 +11,20 @@ using QRCoder;
 // Electronic Signature (that runs through a separate RQES/CSC-API/QTSP path entirely
 // outside EUDIPLO; see the issue for what we found there).
 //
-// Round 1 tried a made-up `type: "text_confirmation"` — the real wallet rejected it
-// outright ("Unsupported transaction data type: text_confirmation"). transaction_data's
-// `type` isn't freeform; wallets validate it against known, registered values. Round 2
-// (this version) uses the real registered type for RQES authorization —
-// `qes_authorization`, with `signatureQualifier`/`documentDigests` — per EWC-consortium's
-// RFC-010 (https://github.com/EWC-consortium/eudi-wallet-rfcs/blob/main/ewc-rfc010-long-term-certifice-qes-creation.md).
-// This still won't complete a real signature (there's no QTSP behind this test), but
-// tells us whether the wallet at least *recognizes* the type and gets further.
+// Round 1 tried a made-up `type: "text_confirmation"` — rejected outright ("Unsupported
+// transaction data type: text_confirmation"). Round 2 tried the real registered RQES type,
+// `qes_authorization` (EWC-consortium RFC-010) — rejected the same way. Both times the
+// wallet's own EudiWalletKit validates `type` against a fixed whitelist before anything
+// reaches the user.
+//
+// Round 3 (this version): read the actual wallet library source
+// (eudi-lib-ios-openid4vp-swift, VPConfiguration.default()) — its real default whitelist
+// is a single type literally named "authorization", not "qes_authorization" or
+// "transaction_data". Per TransactionData.swift's specificParameters(), any JSON fields
+// beyond type/credential_ids/hash_algorithms are extracted generically and handed to the
+// wallet app's UI layer — so once `type` passes validation, a custom `text` field should
+// at least be *readable*, even though whether the wallet app's UI actually *displays* it
+// is a separate, still-open question this round is meant to answer.
 //
 // Reuses AccessControl's already-provisioned, registrar-certified "gate" tenant (via the
 // same AUTH_CLIENT_ID/AUTH_CLIENT_SECRET convention every other sample uses) specifically
@@ -64,16 +70,11 @@ var configJson = $$"""
         },
         "transaction_data": [
             {
-                "type": "qes_authorization",
+                "type": "authorization",
                 "credential_ids": ["pid-sd-jwt"],
-                "signatureQualifier": "eu_eidas_qes",
-                "documentDigests": [
-                    {
-                        "hash": {{JsonSerializer.Serialize(documentHash)}},
-                        "label": "signing-poc-spike-test-document.txt",
-                        "hashAlgorithmOID": "2.16.840.1.101.3.4.2.1"
-                    }
-                ]
+                "text": {{JsonSerializer.Serialize(TestDocumentText)}},
+                "hash": {{JsonSerializer.Serialize(documentHash)}},
+                "hashAlgorithmOID": "2.16.840.1.101.3.4.2.1"
             }
         ],
         "lifeTime": 300
