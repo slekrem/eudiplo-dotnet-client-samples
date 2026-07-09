@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit'
+import { LitElement, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import type { ExploreCredentials } from './api'
 
@@ -61,7 +61,9 @@ export class ExplorerForm extends LitElement {
             required
           />
         </label>
-        <button ?disabled=${this.loading}>${this.loading ? 'Exploring…' : 'Explore'}</button>
+        <button ?disabled=${this.loading}>
+          ${this.loading ? html`<span class="spinner"></span>` : nothing} ${this.loading ? 'Exploring…' : 'Explore'}
+        </button>
       </form>
     `
   }
