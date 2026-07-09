@@ -1,7 +1,8 @@
 import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import type { QueryResult } from './types'
-import { humanize } from './format'
+import { humanize, highlightJson } from './format'
 
 /** One card in the results grid — a single query's outcome (ok/data, or error). */
 @customElement('explorer-section')
@@ -50,7 +51,7 @@ export class ExplorerSection extends LitElement {
         <button class="copy-btn ${this._copied ? 'is-copied' : ''}" type="button" @click=${() => this._copy(text)}>
           ${this._copied ? 'Copied' : 'Copy'}
         </button>
-        <pre class="json">${text}</pre>
+        <pre class="json">${unsafeHTML(highlightJson(text))}</pre>
       </div>
     `
   }

@@ -11,6 +11,13 @@
   --color-ok: #22c55e;
   --color-error: #ef4444;
 
+  /* JSON syntax highlighting — deliberately distinct from --color-ok/--color-error so
+     token colors never get mistaken for a section's status. */
+  --color-json-key: #7dd3fc;
+  --color-json-string: #fbbf24;
+  --color-json-number: #a78bfa;
+  --color-json-boolean: #f472b6;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
@@ -251,7 +258,8 @@ button:disabled {
 .json {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 12.5px;
+  line-height: 1.65;
   color: var(--color-text-muted);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -261,6 +269,31 @@ button:disabled {
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Punctuation (braces, brackets, commas, colons) stays --color-text-muted, inherited from
+   .json above — only these token types get called out, so the highlighting emphasizes
+   content over structure. */
+.json .json-key {
+  color: var(--color-json-key);
+}
+
+.json .json-string {
+  color: var(--color-json-string);
+}
+
+.json .json-number {
+  color: var(--color-json-number);
+}
+
+.json .json-boolean {
+  color: var(--color-json-boolean);
+  font-weight: 600;
+}
+
+.json .json-null {
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .copy-btn {
