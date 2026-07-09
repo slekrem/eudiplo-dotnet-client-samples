@@ -29,9 +29,10 @@ of read-only "basic info" endpoints independently and shows exactly what each re
 - `GetCredentialConfigsAsync` — issuance/credential configs
 - `GetUsersAsync` — human users
 
-Each is caught independently server-side (see `QueryAsync` in `Backend/Program.cs`), so one
-query failing (e.g. a 403 for a role the given credentials don't hold) doesn't take down
-the rest of the dashboard — the frontend just shows that section's error inline.
+Each is caught independently server-side (see `QueryAsync` in
+`Backend/EudiploExplorerService.cs`), so one query failing (e.g. a 403 for a role the given
+credentials don't hold) doesn't take down the rest of the dashboard — the frontend just
+shows that section's error inline.
 
 ## 1. Build the frontend
 
@@ -63,12 +64,22 @@ cd Frontend
 npm run dev   # serves on :5173, proxies /api to :5070 — no CORS needed either way
 ```
 
+## Code layout
+
+`Backend/Program.cs` is a thin composition root — builder setup, DI registration, endpoint
+mapping, `app.Run()`. Everything else lives in its own file:
+
+- `ExploreEndpoints.cs` — the `POST /api/explore` route and its request validation.
+- `EudiploExplorerService.cs` — the actual EUDIPLO-querying logic, DI-registered as a
+  singleton (it's stateless).
+- `ExploreModels.cs` — the request/response record types.
+
 ## Why this sample skips `AddEudiploClient`
 
 Every other sample calls `services.AddEudiploClient(o => { o.BaseUrl = ...; ... })` once at
 startup — that configures a named `HttpClient`'s base address from a URL that's already
-known. This backend doesn't know the target EUDIPLO instance until a request arrives, so it
-can't use that pattern. Instead, `Backend/Program.cs` takes a plain `HttpClient` from
+known. `EudiploExplorerService` doesn't know the target EUDIPLO instance until a request
+arrives, so it can't use that pattern. Instead, it takes a plain `HttpClient` from
 `IHttpClientFactory`, sets `BaseAddress` to whatever the browser submitted, and constructs
 `EudiploApiClient` directly with it. `EudiploApiClient`'s constructor is public precisely to
 support this — building a client per request against caller-supplied credentials, not just

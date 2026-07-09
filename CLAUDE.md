@@ -120,24 +120,41 @@ Non-obvious constraints baked into this code (don't "fix" these without re-readi
 
 ### `Eudiplo.Client.Sample.Explorer`: one `EudiploApiClient` per request, not per process
 
-Every other sample calls `services.AddEudiploClient(o => { o.BaseUrl = ...; ... })` once at
-startup — that configures a named `HttpClient`'s base address from a URL that's already
-known, and registers a DI-scoped `EudiploApiClient` alongside it. Explorer can't do that:
-the target EUDIPLO instance isn't known until a request arrives with it in the body. So
-`Backend/Program.cs` skips `AddEudiploClient` entirely, and instead — inside the
-`POST /api/explore` handler — takes a plain `HttpClient` from `IHttpClientFactory`, sets
-`.BaseAddress` to the submitted URL, and constructs `new EudiploApiClient(http, clientId,
-clientSecret)` directly. That client is used once and discarded; nothing about the request
-survives past the response.
+Unlike AccessControl, this backend's `Program.cs` is a thin composition root only — no
+inline endpoint logic, no inline DTOs. Responsibilities are split by file, current
+minimal-API convention:
 
-The handler queries six endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
+- **`Program.cs`** — builder setup, DI registration (`AddHttpClient()`,
+  `AddSingleton<EudiploExplorerService>()`), `app.MapExploreEndpoints()`, `app.Run()`. Reads
+  top to bottom as a summary of what the app does, not how.
+- **`ExploreEndpoints.cs`** — `MapExploreEndpoints(this IEndpointRouteBuilder)` extension
+  method + the `POST /api/explore` handler. Owns HTTP concerns only: request validation
+  (blank fields, malformed `baseUrl`) and translating the service's result into
+  `Results.Ok`/`Results.BadRequest`.
+- **`EudiploExplorerService.cs`** — the actual EUDIPLO-querying logic, injected via DI
+  (registered as a singleton — it's stateless, nothing about a call survives past
+  `ExploreAsync`'s return). This is where `AddEudiploClient` gets skipped: every other
+  sample calls `services.AddEudiploClient(o => { o.BaseUrl = ...; ... })` once at startup,
+  which configures a named `HttpClient`'s base address from a URL that's already known.
+  `EudiploExplorerService` can't do that — the target EUDIPLO instance isn't known until
+  `ExploreAsync` is called. Instead it takes a plain `HttpClient` from
+  `IHttpClientFactory`, sets `.BaseAddress` to the caller-supplied URL, and constructs
+  `new EudiploApiClient(http, clientId, clientSecret)` directly — built fresh per call,
+  discarded after.
+- **`ExploreModels.cs`** — `ExploreRequest` (the request body), `QueryResult<T>` (one
+  query's outcome), `ExploreResult` (the six named `QueryResult<T>` fields returned to the
+  frontend).
+
+`ExploreAsync` queries six endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
 `GetClientsAsync`, `GetVerifierConfigsAsync`, `GetCredentialConfigsAsync`,
-`GetUsersAsync`) through a small `QueryAsync<T>` wrapper that catches per-call, not
+`GetUsersAsync`) through a private `QueryAsync<T>` wrapper that catches per-call, not
 globally — a tenant client rarely holds every EUDIPLO role, so partial failure (some
-sections `403`, others succeed) is the expected case, not an edge case. The response is a
-JSON object keyed by query name (`{ "keyChains": { "ok": true, "data": [...] }, ... }`);
-the frontend (`explorer-app.ts`) renders it generically by iterating `Object.entries(...)`
-and humanizing each key — adding a query server-side needs no matching frontend change.
+sections `403`, others succeed) is the expected case, not an edge case. `ExploreResult` is
+a concrete named record (not an anonymous type) for the C# side's sake — it still
+serializes to the same JSON shape either way, an object keyed by query name
+(`{ "keyChains": { "ok": true, "data": [...] }, ... }`). The frontend (`explorer-app.ts`)
+renders that generically by iterating `Object.entries(...)` and humanizing each key —
+adding a query server-side needs no matching frontend change.
 
 ### Solution/package structure
 
