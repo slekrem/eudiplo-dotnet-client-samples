@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <PackageVersion Include="Eudiplo.Client" Version="0.1.0" />
+
+    <!-- Eudiplo.Client.Sample.SigningPoC (spike, not wired into the .slnx/CI) -->
+    <PackageVersion Include="QRCoder" Version="1.8.0" />
   </ItemGroup>
 
 </Project>
