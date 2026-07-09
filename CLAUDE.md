@@ -8,19 +8,20 @@ Runnable samples for [`Eudiplo.Client`](https://github.com/slekrem/eudiplo-dotne
 
 Every sample runs against a **real EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `src/Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
 
-These samples don't provision EUDIPLO themselves — they expect an existing, network-reachable instance and client credentials for it, supplied via `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`. No Docker, no local `.env` file.
+These samples don't provision EUDIPLO themselves — they expect an existing, network-reachable instance and client credentials for it. No Docker, no local `.env` file. AccessControl gets those credentials from environment variables, fixed for the process's lifetime; Explorer gets them from a browser form, submitted fresh with every request — see "Architecture" below for why that difference exists.
 
-EUDIPLO's architecture names the integration point this client covers as "your services" (CRM, ERP, Access Control System). Each sample picks one of these named examples and builds a realistic integration for it:
+EUDIPLO's architecture names the integration point this client covers as "your services" (CRM, ERP, Access Control System). Most samples pick one of these named examples and build a realistic integration for it; `Explorer` is the exception — a general-purpose dashboard, not tied to a named example:
 
 | Sample | Pattern | Status |
 |---|---|---|
 | `Eudiplo.Client.Sample.AccessControl` | 3-tier gate: Lit+TS UI → ASP.NET backend → EUDIPLO | done |
+| `Eudiplo.Client.Sample.Explorer` | Enter EUDIPLO URL + credentials in a UI, browse what's reachable | done |
 | `Eudiplo.Client.Sample.CRM` | Verified data via webhook → enrich a record | planned |
 | `Eudiplo.Client.Sample.ERP` | Issue a credential ("credential creation") | planned |
 
 ## Pointing at an EUDIPLO instance
 
-Every sample needs the same three environment variables, pointing at your own running EUDIPLO instance:
+AccessControl needs the same three environment variables, pointing at your own running EUDIPLO instance:
 
 ```bash
 export EUDIPLO_BASE_URL=https://your-eudiplo-instance.example
@@ -28,13 +29,15 @@ export AUTH_CLIENT_ID=...
 export AUTH_CLIENT_SECRET=...
 ```
 
-All three are required — the sample throws an `InvalidOperationException` at startup if any is unset (see `Program.cs`). `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` are the gate tenant's own client credentials, not a tenant-less root client — see "Architecture" below.
+All three are required — it throws an `InvalidOperationException` at startup if any is unset (see `Program.cs`). `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` are the gate tenant's own client credentials, not a tenant-less root client — see "Architecture" below.
+
+Explorer needs **none** of these — it takes the base URL and credentials from a form in the browser instead, per request.
 
 ## Build / run commands
 
 All project code lives under `src/`; the repo root holds only shared build/tooling config (`Directory.Build.props`, `Directory.Packages.props`, `global.json`, etc.).
 
-Solution file: `Eudiplo.Client.Samples.slnx` (currently lists a single .NET *executable* project — the AccessControl frontend is a separate npm project, not part of the .sln).
+Solution file: `Eudiplo.Client.Samples.slnx` (lists the .NET *executable* projects — each sample's frontend is a separate npm project, not part of the .sln).
 
 ```bash
 dotnet build Eudiplo.Client.Samples.slnx
@@ -60,6 +63,22 @@ For frontend edit-and-reload without rebuilding into `wwwroot`, run the Vite dev
 cd src/Eudiplo.Client.Sample.AccessControl/Frontend
 npm run dev   # :5173, proxies /api to :5050, no CORS setup needed
 ```
+
+### `Eudiplo.Client.Sample.Explorer` (dashboard sample)
+
+```bash
+cd src/Eudiplo.Client.Sample.Explorer/Frontend
+npm install
+npm run build
+
+cd ../Backend
+dotnet run --project .
+# → http://localhost:5070 — no env vars needed, fill in the form
+```
+
+Vite dev server: same pattern, `npm run dev` in `Frontend/` proxies `/api` to `:5070`.
+
+Port note: this sample deliberately avoids `5060` — Chrome and Firefox both hard-block navigation to it (`ERR_UNSAFE_PORT`, it's the SIP port). Don't reuse it for a future sample either.
 
 There are no automated test suites in this repo — verification is "run the sample against a real EUDIPLO instance and observe the console output / browser behavior," as documented in each sample's README.
 
@@ -98,6 +117,27 @@ Non-obvious constraints baked into this code (don't "fix" these without re-readi
 - The real German PID (`vct: urn:eudi:pid:de:1`) has no `age_over_18`/`age_equal_or_over` claim — only `birthdate`. The gate requests `birthdate` (full disclosure) and checks the 18-year threshold itself, server-side, in `Program.cs`'s `EnforceAgeGate` — rewriting a `completed` session to `failed` with an `errorReason` when underage, so the frontend needs no special-casing.
 - The polling fallback (`GET /api/gate/sessions/{id}`) exists alongside SSE because a backgrounded mobile browser tab (e.g. switching to the wallet app to scan/confirm) can silently kill the SSE connection with no `onerror` ever firing.
 - A self-signed access key-chain gets rejected by real wallets ("Could not trust certificate chain") — the tenant's key-chain needs a registrar-issued certificate for a real wallet to trust it (see "Registrar registration" in the README).
+
+### `Eudiplo.Client.Sample.Explorer`: one `EudiploApiClient` per request, not per process
+
+Every other sample calls `services.AddEudiploClient(o => { o.BaseUrl = ...; ... })` once at
+startup — that configures a named `HttpClient`'s base address from a URL that's already
+known, and registers a DI-scoped `EudiploApiClient` alongside it. Explorer can't do that:
+the target EUDIPLO instance isn't known until a request arrives with it in the body. So
+`Backend/Program.cs` skips `AddEudiploClient` entirely, and instead — inside the
+`POST /api/explore` handler — takes a plain `HttpClient` from `IHttpClientFactory`, sets
+`.BaseAddress` to the submitted URL, and constructs `new EudiploApiClient(http, clientId,
+clientSecret)` directly. That client is used once and discarded; nothing about the request
+survives past the response.
+
+The handler queries six endpoints (`GetVersionAsync`, `GetKeyChainsAsync`,
+`GetClientsAsync`, `GetVerifierConfigsAsync`, `GetCredentialConfigsAsync`,
+`GetUsersAsync`) through a small `QueryAsync<T>` wrapper that catches per-call, not
+globally — a tenant client rarely holds every EUDIPLO role, so partial failure (some
+sections `403`, others succeed) is the expected case, not an edge case. The response is a
+JSON object keyed by query name (`{ "keyChains": { "ok": true, "data": [...] }, ... }`);
+the frontend (`explorer-app.ts`) renders it generically by iterating `Object.entries(...)`
+and humanizing each key — adding a query server-side needs no matching frontend change.
 
 ### Solution/package structure
 

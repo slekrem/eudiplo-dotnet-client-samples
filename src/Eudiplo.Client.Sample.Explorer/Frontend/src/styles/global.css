@@ -1,0 +1,189 @@
+/* Same dark palette as the AccessControl sample's gate-app, for a consistent look across
+   the "Eudiplo.Client samples" family — but a wide, scrollable dashboard layout instead of
+   a single centered kiosk card, since this one displays arbitrary amounts of tenant data. */
+:root {
+  --color-bg: #0b0f14;
+  --color-surface: #141a22;
+  --color-border: #232c38;
+  --color-text: #e8edf2;
+  --color-text-muted: #8b97a6;
+  --color-accent: #22d3ee;
+  --color-error: #ef4444;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius: 12px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  padding: 32px 24px 64px;
+}
+
+explorer-app {
+  display: block;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+header {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: 28px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.sub {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+form.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+  max-width: 480px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+input {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--color-text);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+button {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  cursor: pointer;
+  background: var(--color-accent);
+  color: #04202a;
+  transition: filter 0.15s ease;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 13px;
+}
+
+.top-error {
+  margin: -16px 0 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.section h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.count {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.json {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 20px 16px 48px;
+  }
+}

@@ -18,15 +18,20 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        frontend:
+          - src/Eudiplo.Client.Sample.AccessControl/Frontend
+          - src/Eudiplo.Client.Sample.Explorer/Frontend
     defaults:
       run:
-        working-directory: src/Eudiplo.Client.Sample.AccessControl/Frontend
+        working-directory: ${{ matrix.frontend }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: src/Eudiplo.Client.Sample.AccessControl/Frontend/package-lock.json
+          cache-dependency-path: ${{ matrix.frontend }}/package-lock.json
       - run: npm ci
       - run: npm run build
