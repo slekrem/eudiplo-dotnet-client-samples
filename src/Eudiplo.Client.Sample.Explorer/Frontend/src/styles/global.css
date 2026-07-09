@@ -178,6 +178,15 @@ button:disabled {
   cursor: default;
 }
 
+/* Keyboard-only focus ring, consistent across every interactive element (buttons, the
+   Copy button, the Raw JSON <summary> toggle) instead of the browser's mismatched
+   defaults — but only for keyboard nav, not mouse clicks, per :focus-visible. */
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
 .spinner {
   display: inline-block;
   width: 8px;
