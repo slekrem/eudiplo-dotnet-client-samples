@@ -251,6 +251,102 @@ button:disabled {
   word-break: break-all;
 }
 
+/* Labeled-fields view (json-view.ts) — the main way section data is shown. A native <dl>
+   as a two-column grid: label column auto-sized to its own content, so alignment stays
+   tidy per record without a hardcoded width that's wrong for half the field names. */
+.jv-fields {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 12px;
+  row-gap: 7px;
+  align-items: start;
+}
+
+.jv-fields dt {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  padding-top: 1px;
+}
+
+.jv-fields dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.jv-value {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.jv-null {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 12.5px;
+}
+
+.jv-bool {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.jv-blob {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  max-height: 140px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Array of objects (e.g. multiple key-chains) — one bordered record per item, each with
+   its own .jv-fields grid. Nesting one level deeper (e.g. activePublicKey inside a
+   key-chain) reuses the same two classes recursively, so depth is unbounded for free. */
+.jv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jv-item {
+  padding: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.raw-json {
+  margin-top: 14px;
+}
+
+.raw-json summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.raw-json summary:hover {
+  color: var(--color-text);
+}
+
+.raw-json[open] summary {
+  margin-bottom: 8px;
+}
+
 .json-wrap {
   position: relative;
 }

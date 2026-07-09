@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import type { QueryResult } from './types'
 import { humanize, highlightJson } from './format'
+import { renderJsonValue } from './json-view'
 
 /** One card in the results grid — a single query's outcome (ok/data, or error). */
 @customElement('explorer-section')
@@ -37,22 +38,28 @@ export class ExplorerSection extends LitElement {
       if (data.length === 0) return html`<p class="muted">Empty.</p>`
       return html`
         <p class="count">${data.length} item${data.length === 1 ? '' : 's'}</p>
-        ${this._renderJson(data)}
+        ${renderJsonValue(data)} ${this._renderRawToggle(data)}
       `
     }
     if (typeof data === 'string') return html`<p class="value">${data}</p>`
-    return this._renderJson(data)
+    return html`${renderJsonValue(data)} ${this._renderRawToggle(data)}`
   }
 
-  private _renderJson(data: unknown) {
+  // The labeled-fields view above is the main event — this is a fallback for whoever
+  // wants the exact raw payload (to diff against the EUDIPLO API docs, paste into another
+  // tool, etc.), collapsed by default so it doesn't compete with the fields for attention.
+  private _renderRawToggle(data: unknown) {
     const text = JSON.stringify(data, null, 2)
     return html`
-      <div class="json-wrap">
-        <button class="copy-btn ${this._copied ? 'is-copied' : ''}" type="button" @click=${() => this._copy(text)}>
-          ${this._copied ? 'Copied' : 'Copy'}
-        </button>
-        <pre class="json">${unsafeHTML(highlightJson(text))}</pre>
-      </div>
+      <details class="raw-json">
+        <summary>Raw JSON</summary>
+        <div class="json-wrap">
+          <button class="copy-btn ${this._copied ? 'is-copied' : ''}" type="button" @click=${() => this._copy(text)}>
+            ${this._copied ? 'Copied' : 'Copy'}
+          </button>
+          <pre class="json">${unsafeHTML(highlightJson(text))}</pre>
+        </div>
+      </details>
     `
   }
 
