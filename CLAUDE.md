@@ -157,6 +157,27 @@ serializes to the same JSON shape either way, an object keyed by query name
 renders that generically by iterating `Object.entries(...)` and humanizing each key —
 adding a query server-side needs no matching frontend change.
 
+### `Eudiplo.Client.Sample.Explorer`'s frontend: components + a deliberate visual concept
+
+Split by responsibility, same idea as the backend: `types.ts` (wire shape), `api.ts`
+(the one `fetch` call), `format.ts` (`humanize()` plus the raw-JSON syntax highlighter),
+`json-view.ts` (a recursive, dependency-free renderer turning arbitrary EUDIPLO data into
+labeled `<dl>` field rows — not a per-resource-type layout; nested objects/arrays recurse
+into indented sub-fields for free), and the three components (`explorer-form`,
+`explorer-results`, `explorer-section`) wired together by `explorer-app.ts`. Properties
+flow down, a `explore` `CustomEvent<ExploreCredentials>` flows up from the form.
+
+`global.css`'s theme is a deliberate concept, not incidental styling — don't "fix" it back
+toward a generic dark dashboard without reading its header comment first. Short version:
+EUDI Wallet digitizes physical credentials, so the page is styled as an inspection
+console — a dark instrument panel (the credentials form) plus paper-toned "document" cards
+for successfully retrieved records (`.section.is-ok`). A failed query stays on the dark
+console instead (`.section.is-error`) — there's no document to show. Long technical values
+(certificate PEMs, the raw-JSON disclosure) keep the console's dark/mono treatment even
+inside a paper card on purpose — the one place the underlying machine data shows through.
+The signature element is `.stamp`, a small rotated ink-stamp badge ("Verified"/"Failed")
+replacing what would otherwise be a plain colored status dot.
+
 ### Solution/package structure
 
 - `Directory.Build.props` — shared MSBuild settings for every .csproj: nullable enabled, implicit usings, latest analyzers.

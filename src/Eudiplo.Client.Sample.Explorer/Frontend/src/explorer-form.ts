@@ -31,36 +31,39 @@ export class ExplorerForm extends LitElement {
   override render() {
     return html`
       <form class="card" @submit=${(e: Event) => this._submit(e)}>
-        <label>
-          EUDIPLO base URL
-          <input
-            type="url"
-            placeholder="https://your-eudiplo-instance.example"
-            .value=${this._baseUrl}
-            @input=${(e: Event) => (this._baseUrl = (e.target as HTMLInputElement).value)}
-            required
-          />
-        </label>
-        <label>
-          Client ID
-          <input
-            type="text"
-            autocomplete="off"
-            .value=${this._clientId}
-            @input=${(e: Event) => (this._clientId = (e.target as HTMLInputElement).value)}
-            required
-          />
-        </label>
-        <label>
-          Client secret
-          <input
-            type="password"
-            autocomplete="off"
-            .value=${this._clientSecret}
-            @input=${(e: Event) => (this._clientSecret = (e.target as HTMLInputElement).value)}
-            required
-          />
-        </label>
+        <fieldset>
+          <legend>Access request</legend>
+          <label>
+            EUDIPLO base URL
+            <input
+              type="url"
+              placeholder="https://your-eudiplo-instance.example"
+              .value=${this._baseUrl}
+              @input=${(e: Event) => (this._baseUrl = (e.target as HTMLInputElement).value)}
+              required
+            />
+          </label>
+          <label>
+            Client ID
+            <input
+              type="text"
+              autocomplete="off"
+              .value=${this._clientId}
+              @input=${(e: Event) => (this._clientId = (e.target as HTMLInputElement).value)}
+              required
+            />
+          </label>
+          <label>
+            Client secret
+            <input
+              type="password"
+              autocomplete="off"
+              .value=${this._clientSecret}
+              @input=${(e: Event) => (this._clientSecret = (e.target as HTMLInputElement).value)}
+              required
+            />
+          </label>
+        </fieldset>
         <button ?disabled=${this.loading}>
           ${this.loading ? html`<span class="spinner"></span>` : nothing} ${this.loading ? 'Exploring…' : 'Explore'}
         </button>

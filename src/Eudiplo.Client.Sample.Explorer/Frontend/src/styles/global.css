@@ -1,27 +1,42 @@
-/* Same dark palette as the AccessControl sample's gate-app, for a consistent look across
-   the "Eudiplo.Client samples" family — but a wide, scrollable dashboard layout instead of
-   a single centered kiosk card, since this one displays arbitrary amounts of tenant data. */
+/* "Inspection desk" — EUDI Wallet digitizes physical credentials (ID cards, passports,
+   certificates), so Explorer is styled as a digital-identity inspection console rather than
+   a generic dark dashboard: a dark instrument panel where you submit access credentials,
+   and paper-toned "document" cards where verified tenant records appear. A failed query
+   stays on the dark console instead — there's no document to hand over. Long technical
+   values (certificate PEMs, raw JSON) keep the console's dark/mono treatment even inside a
+   paper card, the one place the underlying machine data shows through, like reading a
+   document under UV light. */
 :root {
-  --color-bg: #0b0f14;
-  --color-surface: #141a22;
-  --color-border: #232c38;
-  --color-text: #e8edf2;
-  --color-text-muted: #8b97a6;
-  --color-accent: #22d3ee;
-  --color-ok: #22c55e;
-  --color-error: #ef4444;
+  /* Console chrome — page background, the credentials form, chrome text. */
+  --ink: #10151f;
+  --ink-panel: #1a2130;
+  --ink-line: #2a3348;
+  --ink-text: #e9e4d8;
+  --ink-text-muted: #8b93a6;
 
-  /* JSON syntax highlighting — deliberately distinct from --color-ok/--color-error so
-     token colors never get mistaken for a section's status. */
-  --color-json-key: #7dd3fc;
-  --color-json-string: #fbbf24;
-  --color-json-number: #a78bfa;
-  --color-json-boolean: #f472b6;
+  /* Document surface — successfully retrieved record cards. */
+  --paper: #f3ecdc;
+  --paper-line: #d9c9a3;
+  --paper-inset: #e7ddc4;
+  --paper-ink: #2a2116;
+  --paper-ink-muted: #8a7a5c;
 
+  /* Accent + stamp inks. */
+  --brass: #c08a2e;
+  --stamp-ok: #2f6b46;
+  --stamp-error: #9c3b2e;
+
+  /* JSON token colors — used only inside the dark insets (raw JSON, long blob values). */
+  --code-key: #7dd3fc;
+  --code-string: #fbbf24;
+  --code-number: #a78bfa;
+  --code-boolean: #f472b6;
+
+  --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --radius: 12px;
+  --radius: 10px;
   color-scheme: dark;
 }
 
@@ -36,47 +51,52 @@ body {
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--ink);
+  color: var(--ink-text);
   font-family: var(--font-sans);
-  padding: 32px 24px 64px;
+  padding: 40px 24px 72px;
 }
 
 explorer-app {
   display: block;
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
 header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .eyebrow {
-  font-size: 12px;
-  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin: 0 0 4px;
+  color: var(--brass);
+  margin: 0 0 10px;
 }
 
 h1 {
-  font-size: 28px;
-  margin: 0 0 8px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin: 0 0 10px;
 }
 
 .sub {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--ink-text-muted);
   font-size: 14px;
-  line-height: 1.5;
-  max-width: 60ch;
+  line-height: 1.6;
+  max-width: 56ch;
 }
 
+/* --- Console card: the credentials form --- */
+
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--ink-panel);
+  border: 1px solid var(--ink-line);
   border-radius: var(--radius);
   padding: 20px;
 }
@@ -84,9 +104,30 @@ h1 {
 form.card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin-bottom: 32px;
   max-width: 480px;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* fieldset's flex `gap` doesn't apply around <legend> in any browser tested — it isn't a
+   normal flex-item participant — so the spacing below it has to be a real margin instead. */
+legend {
+  padding: 0;
+  margin: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-text-muted);
 }
 
 label {
@@ -94,40 +135,42 @@ label {
   flex-direction: column;
   gap: 6px;
   font-size: 13px;
-  color: var(--color-text-muted);
+  color: var(--ink-text-muted);
 }
 
 input {
   font: inherit;
   font-family: var(--font-mono);
   font-size: 13px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
   padding: 10px 12px;
-  color: var(--color-text);
+  color: var(--ink-text);
 }
 
 input:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--brass);
 }
 
 button {
   align-self: flex-start;
   font: inherit;
   font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
   border: none;
-  border-radius: 999px;
-  padding: 12px 26px;
+  border-radius: 6px;
+  padding: 12px 24px;
   cursor: pointer;
-  background: var(--color-accent);
-  color: #04202a;
+  background: var(--brass);
+  color: #241704;
   transition: filter 0.15s ease;
 }
 
 button:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
 }
 
 button:disabled {
@@ -146,8 +189,13 @@ button:disabled {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -162,11 +210,11 @@ button:disabled {
   gap: 8px;
   margin: 0;
   padding: 10px 12px;
-  color: var(--color-error);
+  color: #f3a99c;
   font-size: 13px;
   line-height: 1.4;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(156, 59, 46, 0.18);
+  border: 1px solid rgba(156, 59, 46, 0.4);
   border-radius: 8px;
 }
 
@@ -180,68 +228,91 @@ button:disabled {
   max-width: 480px;
 }
 
+/* --- Results grid --- */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .section {
-  border-left: 3px solid var(--color-border);
+  position: relative;
+  padding: 20px;
+  border-radius: var(--radius);
 }
 
 .section.is-ok {
-  border-left-color: var(--color-ok);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  color: var(--paper-ink);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.55);
 }
 
 .section.is-error {
-  border-left-color: var(--color-error);
+  background: var(--ink-panel);
+  border: 1px solid var(--ink-line);
+  color: var(--ink-text);
 }
 
 .section .heading {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
 }
 
 .section h2 {
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
   margin: 0;
-  font-weight: 600;
 }
 
-.status-dot {
+/* The signature element — a small rotated ink-stamp badge instead of a plain status dot. */
+.stamp {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  opacity: 0.85;
 }
 
-.status-dot.is-ok {
-  background: var(--color-ok);
+.stamp.is-ok {
+  color: var(--stamp-ok);
 }
 
-.status-dot.is-error {
-  background: var(--color-error);
+.stamp.is-error {
+  color: var(--stamp-error);
 }
 
 .count {
   display: inline-block;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   padding: 2px 8px;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  color: var(--paper-ink-muted);
+  background: var(--paper-inset);
+  border: 1px solid var(--paper-line);
   border-radius: 999px;
 }
 
 .muted {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--paper-ink-muted);
   font-size: 13px;
+}
+
+.section.is-error .muted {
+  color: var(--ink-text-muted);
 }
 
 .value {
@@ -251,24 +322,26 @@ button:disabled {
   word-break: break-all;
 }
 
-/* Labeled-fields view (json-view.ts) — the main way section data is shown. A native <dl>
+/* --- Labeled fields (json-view.ts) — the main way section data is shown. A native <dl>
    as a two-column grid: label column auto-sized to its own content, so alignment stays
-   tidy per record without a hardcoded width that's wrong for half the field names. */
+   tidy per record without a hardcoded width that's wrong for half the field names. --- */
+
 .jv-fields {
   margin: 0;
   display: grid;
   grid-template-columns: max-content 1fr;
-  column-gap: 12px;
-  row-gap: 7px;
+  column-gap: 14px;
+  row-gap: 8px;
   align-items: start;
 }
 
 .jv-fields dt {
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: 12px;
+  padding-top: 2px;
+  color: var(--paper-ink-muted);
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  padding-top: 1px;
 }
 
 .jv-fields dd {
@@ -279,12 +352,12 @@ button:disabled {
 .jv-value {
   font-family: var(--font-mono);
   font-size: 12.5px;
-  color: var(--color-text);
+  color: var(--paper-ink);
   word-break: break-word;
 }
 
 .jv-null {
-  color: var(--color-text-muted);
+  color: var(--paper-ink-muted);
   font-style: italic;
   font-size: 12.5px;
 }
@@ -293,23 +366,7 @@ button:disabled {
   font-family: var(--font-mono);
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--color-text);
-}
-
-.jv-blob {
-  margin: 2px 0 0;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  max-height: 140px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
+  color: var(--paper-ink);
 }
 
 /* Array of objects (e.g. multiple key-chains) — one bordered record per item, each with
@@ -318,107 +375,134 @@ button:disabled {
 .jv-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .jv-item {
-  padding: 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  padding: 12px;
+  background: var(--paper-inset);
+  border: 1px solid var(--paper-line);
   border-radius: 8px;
 }
 
-.raw-json {
-  margin-top: 14px;
+/* --- Dark insets: technical data "revealed under the light" — long blob values and the
+   raw-JSON disclosure both keep the console's dark/mono treatment even inside a paper
+   card, on purpose. --- */
+
+.jv-blob,
+.json {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #9aa4bb;
+  background: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
-.raw-json summary {
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--color-text-muted);
-  user-select: none;
+.jv-blob {
+  margin-top: 2px;
+  max-height: 160px;
 }
 
-.raw-json summary:hover {
-  color: var(--color-text);
+.json {
+  max-height: 260px;
+  padding-right: 36px;
+  word-break: break-word;
 }
 
-.raw-json[open] summary {
-  margin-bottom: 8px;
+/* Punctuation (braces, brackets, commas, colons) stays the inset's base color above —
+   only these token types get called out, so the highlighting emphasizes content over
+   structure. */
+.json .json-key {
+  color: var(--code-key);
+}
+
+.json .json-string {
+  color: var(--code-string);
+}
+
+.json .json-number {
+  color: var(--code-number);
+}
+
+.json .json-boolean {
+  color: var(--code-boolean);
+  font-weight: 600;
+}
+
+.json .json-null {
+  color: #6b7690;
+  font-style: italic;
 }
 
 .json-wrap {
   position: relative;
 }
 
-.json {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 10px 36px 10px 12px;
-  max-height: 240px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* Punctuation (braces, brackets, commas, colons) stays --color-text-muted, inherited from
-   .json above — only these token types get called out, so the highlighting emphasizes
-   content over structure. */
-.json .json-key {
-  color: var(--color-json-key);
-}
-
-.json .json-string {
-  color: var(--color-json-string);
-}
-
-.json .json-number {
-  color: var(--color-json-number);
-}
-
-.json .json-boolean {
-  color: var(--color-json-boolean);
-  font-weight: 600;
-}
-
-.json .json-null {
-  color: var(--color-text-muted);
-  font-style: italic;
-}
-
 .copy-btn {
   position: absolute;
   top: 6px;
   right: 6px;
-  align-self: auto;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 500;
   padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  border-radius: 5px;
+  cursor: pointer;
+  background: var(--ink-panel);
+  border: 1px solid var(--ink-line);
+  color: var(--ink-text-muted);
 }
 
 .copy-btn:hover {
-  filter: none;
-  color: var(--color-text);
-  border-color: var(--color-accent);
+  color: var(--ink-text);
+  border-color: var(--brass);
 }
 
 .copy-btn.is-copied {
-  color: var(--color-ok);
-  border-color: var(--color-ok);
+  color: #7fd4a0;
+  border-color: #7fd4a0;
+}
+
+.raw-json {
+  margin-top: 16px;
+}
+
+.raw-json summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--paper-ink-muted);
+  user-select: none;
+}
+
+.section.is-error .raw-json summary {
+  color: var(--ink-text-muted);
+}
+
+.raw-json summary:hover {
+  color: var(--brass);
+}
+
+.raw-json[open] summary {
+  margin-bottom: 10px;
 }
 
 @media (max-width: 600px) {
   body {
-    padding: 20px 16px 48px;
+    padding: 28px 16px 56px;
+  }
+
+  h1 {
+    font-size: 28px;
   }
 }

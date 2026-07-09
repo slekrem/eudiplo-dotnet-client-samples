@@ -20,10 +20,10 @@ export class ExplorerSection extends LitElement {
   override render() {
     const status = this.result.ok ? 'is-ok' : 'is-error'
     return html`
-      <section class="card section ${status}">
+      <section class="section ${status}">
         <div class="heading">
-          <span class="status-dot ${status}"></span>
           <h2>${humanize(this.name)}</h2>
+          <span class="stamp ${status}">${this.result.ok ? 'Verified' : 'Failed'}</span>
         </div>
         ${this.result.ok ? this._renderData(this.result.data) : html`<p class="error">${this.result.error}</p>`}
       </section>
