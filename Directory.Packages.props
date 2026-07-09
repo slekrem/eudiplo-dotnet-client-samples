@@ -6,9 +6,6 @@
 
   <ItemGroup>
     <PackageVersion Include="Eudiplo.Client" Version="0.1.0" />
-
-    <!-- Eudiplo.Client.Sample -->
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
   </ItemGroup>
 
 </Project>

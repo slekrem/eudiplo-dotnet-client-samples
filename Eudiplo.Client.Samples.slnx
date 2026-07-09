@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="src/Eudiplo.Client.Sample/Eudiplo.Client.Sample.csproj" />
   <Project Path="src/Eudiplo.Client.Sample.AccessControl/Backend/Eudiplo.Client.Sample.AccessControl.Backend.csproj" />
 </Solution>

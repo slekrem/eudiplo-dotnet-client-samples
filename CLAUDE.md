@@ -8,13 +8,12 @@ Runnable samples for [`Eudiplo.Client`](https://github.com/slekrem/eudiplo-dotne
 
 Every sample runs against a **real EUDIPLO instance** — never a mock. This is a deliberate, load-bearing choice repeated throughout the READMEs: several real bugs (in `Eudiplo.Client` itself, not these samples) were only found this way — see "Why building this against a real server mattered" in `src/Eudiplo.Client.Sample.AccessControl/README.md`. When modifying or extending a sample, keep testing it against the real instance, not by mocking `EudiploApiClient`.
 
-These samples don't provision EUDIPLO themselves — they expect an existing, network-reachable instance and root-client credentials for it, supplied via `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`. No Docker, no local `.env` file.
+These samples don't provision EUDIPLO themselves — they expect an existing, network-reachable instance and client credentials for it, supplied via `EUDIPLO_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`. No Docker, no local `.env` file.
 
 EUDIPLO's architecture names the integration point this client covers as "your services" (CRM, ERP, Access Control System). Each sample picks one of these named examples and builds a realistic integration for it:
 
 | Sample | Pattern | Status |
 |---|---|---|
-| `Eudiplo.Client.Sample` | Generic: root client → tenant → key-chain | done |
 | `Eudiplo.Client.Sample.AccessControl` | 3-tier gate: Lit+TS UI → ASP.NET backend → EUDIPLO | done |
 | `Eudiplo.Client.Sample.CRM` | Verified data via webhook → enrich a record | planned |
 | `Eudiplo.Client.Sample.ERP` | Issue a credential ("credential creation") | planned |
@@ -29,24 +28,17 @@ export AUTH_CLIENT_ID=...
 export AUTH_CLIENT_SECRET=...
 ```
 
-All three are required — the samples throw an `InvalidOperationException` at startup if any is unset (see each `Program.cs`). What kind of client `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` must be differs per sample — see "Architecture" below.
+All three are required — the sample throws an `InvalidOperationException` at startup if any is unset (see `Program.cs`). `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` are the gate tenant's own client credentials, not a tenant-less root client — see "Architecture" below.
 
 ## Build / run commands
 
 All project code lives under `src/`; the repo root holds only shared build/tooling config (`Directory.Build.props`, `Directory.Packages.props`, `global.json`, etc.).
 
-Solution file: `Eudiplo.Client.Samples.slnx` (only includes the two .NET *executable* projects — the AccessControl frontend is a separate npm project, not part of the .sln).
+Solution file: `Eudiplo.Client.Samples.slnx` (currently lists a single .NET *executable* project — the AccessControl frontend is a separate npm project, not part of the .sln).
 
 ```bash
 dotnet build Eudiplo.Client.Samples.slnx
 ```
-
-### `Eudiplo.Client.Sample` (generic console sample)
-
-```bash
-dotnet run --project src/Eudiplo.Client.Sample
-```
-Creates a tenant, creates a key-chain as that tenant, then deletes the tenant — safe to re-run.
 
 ### `Eudiplo.Client.Sample.AccessControl` (3-tier sample)
 
@@ -73,31 +65,22 @@ There are no automated test suites in this repo — verification is "run the sam
 
 ## Architecture
 
-### `Eudiplo.Client.Sample`: root client → tenant-scoped client
+### `Eudiplo.Client.Sample.AccessControl` never provisions EUDIPLO itself
 
-This sample demonstrates the two-step DI/auth shape `Eudiplo.Client` is built around for
-*provisioning* use cases:
-
-1. A **root client** (`EudiploApiClient`, DI-registered via `services.AddEudiploClient(o => {...})`) is authenticated with the tenant-less root credentials (`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET`). It can manage tenants (`GetTenantsAsync`, `CreateTenantAsync`, `DeleteTenantAsync`, `GetTenantAsync`) but not tenant-scoped resources like key-chains.
-2. Creating a tenant (`CreateTenantAsync`) returns an auto-generated **tenant admin client**'s `clientId`/`clientSecret` (parsed out of the JSON response, under `.client.clientId`/`.client.clientSecret`). A **second** `EudiploApiClient` is constructed manually (its constructor is deliberately public, not just DI-injectable) from an `IHttpClientFactory`-created `HttpClient` (via `EudiploApiClient.HttpClientName`) plus those tenant credentials. This second client does tenant-scoped operations (key-chains, presentation configs, sessions).
-
-The tenant admin client's secret is returned **only once**, at creation time — EUDIPLO cannot re-issue it; this sample sidesteps that entirely by deleting the tenant it created at the end of every run (see its README).
-
-**`Eudiplo.Client.Sample.AccessControl` deliberately does *not* follow this pattern.** It
-has a real, pre-existing EUDIPLO tenant with its own client credentials (not a root
-client) — `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` for this sample *are* that tenant's own
-credentials. The backend authenticates directly as that tenant via a single DI-registered
-`EudiploApiClient` and never calls any tenant-management endpoint (`CreateTenantAsync`,
-`DeleteTenantAsync`, key-chain or presentation-config creation) at all — this is enforced
-by the code no longer containing that logic, not just by a default it happens to take. If
-you're tempted to add "auto-provision if missing" back in, don't — that was a deliberate,
-requested removal (a previous version did self-provision a self-signed-cert tenant by
-default, which a real wallet then rejected as untrusted; see "Registrar registration" in
-its README).
+The backend has a real, pre-existing EUDIPLO tenant with its own client credentials (not a
+tenant-less root client) — `AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` for this sample *are* that
+tenant's own credentials. It authenticates directly as that tenant via a single
+DI-registered `EudiploApiClient` (`services.AddEudiploClient(o => {...})`) and never calls
+any tenant-management endpoint (`CreateTenantAsync`, `DeleteTenantAsync`, key-chain or
+presentation-config creation) at all — this is enforced by the code no longer containing
+that logic, not just by a default it happens to take. If you're tempted to add
+"auto-provision if missing" back in, don't — that was a deliberate, requested removal (a
+previous version did self-provision a self-signed-cert tenant by default, which a real
+wallet then rejected as untrusted; see "Registrar registration" in its README).
 
 ### `Eudiplo.Client.Sample.AccessControl`'s three real tiers
 
-Unlike the single-project generic sample, this one deliberately has separate `Backend/` and `Frontend/` folders to demonstrate the trust boundary from EUDIPLO's architecture diagram — the browser never talks to EUDIPLO directly, only to this sample's own backend:
+This sample deliberately has separate `Backend/` and `Frontend/` folders to demonstrate the trust boundary from EUDIPLO's architecture diagram — the browser never talks to EUDIPLO directly, only to this sample's own backend:
 
 ```
 Browser (gate-app, Lit + TypeScript)  →  Backend (ASP.NET Core minimal API)  →  EUDIPLO
@@ -120,4 +103,4 @@ Non-obvious constraints baked into this code (don't "fix" these without re-readi
 
 - `Directory.Build.props` — shared MSBuild settings for every .csproj: nullable enabled, implicit usings, latest analyzers.
 - `Directory.Packages.props` — central package version management (`ManagePackageVersionsCentrally`); add new package versions here, not in individual `.csproj` files.
-- `Eudiplo.Client.Samples.slnx` — the new XML-light solution format; only lists the .NET executable projects.
+- `Eudiplo.Client.Samples.slnx` — the new XML-light solution format.
